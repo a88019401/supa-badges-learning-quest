@@ -4,17 +4,18 @@ import { BADGE_QR } from "../state/progress";
 
 // 顯示文字（名稱 + 說明）
 const BADGE_META: Record<string, { name: string; desc: string }> = {
-  // 參與類 Participation
-  LOGIN_STREAK:   { name: "持之以恆", desc: "累積登入學習的天數" },
-  TIME_KEEPER:    { name: "時間管理者", desc: "累積學習時數" },
-  STORY_FAN:      { name: "故事迷", desc: "閱讀課文故事" },
-  GAME_LOVER:     { name: "遊戲狂熱", desc: "遊玩小遊戲" },
-  VOCAB_DRILLER:  { name: "單字達人", desc: "完成單字練習" },
-  GRAMMAR_NERD:   { name: "文法專家", desc: "完成文法練習" },
-  XP_COLLECTOR:   { name: "經驗收藏家", desc: "累積 XP 點數" },
-  UNIT_EXPLORER:  { name: "探險家", desc: "解鎖不同單元" },
-  CLICK_MASTER:   { name: "行動派", desc: "熱衷各種點擊互動" },
-  REVIEWER:       { name: "溫故知新", desc: "重複練習與複習" },
+ 
+  // 參與類 Participation —— 短期實驗版
+  LOGIN_STREAK:   { name: "任務參與者", desc: "在平台中進行多次學習或遊戲行為" },
+  TIME_KEEPER:    { name: "練習場次", desc: "完成多場遊戲或測驗" },
+  STORY_FAN:      { name: "故事迷", desc: "多次閱讀課文故事" },
+  GAME_LOVER:     { name: "遊戲玩家", desc: "多次參與遊戲化活動" },
+  VOCAB_DRILLER:  { name: "單字練習者", desc: "反覆進行單字學習" },
+  GRAMMAR_NERD:   { name: "文法練習者", desc: "反覆進行文法學習" },
+  XP_COLLECTOR:   { name: "經驗收藏家", desc: "累積相當多的 XP 點數" },
+  UNIT_EXPLORER:  { name: "活動探索者", desc: "嘗試不同種類的學習活動" },
+  CLICK_MASTER:   { name: "行動派", desc: "進行各種互動與點擊操作" },
+  REVIEWER:       { name: "溫故知新", desc: "多次重複遊玩或測驗" },
 
   // 技巧類 Skill
   SNAKE_MASTER:   { name: "貪吃蛇王", desc: "貪吃蛇高分高手" },

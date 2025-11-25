@@ -97,7 +97,7 @@ src/
 ├─ types.ts                    # 全域 TypeScript 型別定義
 ├─ App.tsx                     # 主應用程式：頁籤切換與學習流程
 └─ main.tsx                    # 應用程式入口，掛載 AuthProvider
-
+```
 後端設定（Supabase）
 
 本專案使用 Supabase 處理使用者認證與資料儲存。若要自行架設，請依下列步驟：
