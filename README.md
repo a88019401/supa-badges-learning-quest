@@ -1,71 +1,122 @@
-LearningQuest: 可模組化英語學習平台
-LearningQuest 是一個可模組化的英語學習網站原型，採用 React + TypeScript + Vite + Tailwind CSS 打造。專案以「資料驅動」為核心，教材內容可輕易擴充。
+# LearningQuest: 可模組化英語學習平台
 
-最新版本整合了 Supabase 作為後端，實現了使用者身份驗證與雲端進度儲存，讓學習紀錄不再僅限於單一裝置。
+LearningQuest 是一個可模組化的英語學習網站原型，採用 **React + TypeScript + Vite + Tailwind CSS** 打造。  
+專案以「**資料驅動**」為核心，教材內容可輕易擴充，並整合 **Supabase** 作為後端，實現：
 
-核心技術
-前端: React, TypeScript, Vite, Tailwind CSS v4
+- 使用者身份驗證（Email + 密碼）
+- 雲端進度儲存（XP、星等、徽章、遊戲表現）
+- 排行榜與未來學習分析的基礎資料
 
-後端與資料庫: Supabase (PostgreSQL)
+---
 
-核心功能: 互動式單字、文法、課文練習，搭配小遊戲（貪吃蛇、俄羅斯方塊）、徽章系統與雲端進度同步。
-系統架構
-執行流程
-使用者登入:
+## 核心技術
 
-新使用者透過 AuthGate 元件輸入 Email 進行無密碼（魔法連結）登入。
+- 前端：React, TypeScript, Vite, Tailwind CSS v4  
+- 後端與資料庫：Supabase（PostgreSQL + Auth + RLS）  
+- 核心功能：
+  - 互動式單字、文法、課文練習
+  - 小遊戲：貪吃蛇（單字）、俄羅斯方塊式文法重組
+  - **資料驅動的徽章系統（30 枚徽章、銅銀金三級）**
+  - 雲端進度同步與排行榜
 
-首次登入成功後，使用者會被導向 ProfileSetup 頁面，必須設定「名字」、「學校」和「年級」。
+---
 
-已設定過資料的使用者登入後會直接進入主應用程式。
+## 系統架構與執行流程
 
-資料載入:
+### 1. 使用者登入流程
 
-AuthProvider (AuthContext.tsx) 負責管理使用者登入狀態，並在登入後從 Supabase 的 profiles 資料表中讀取該使用者的個人資料與學習進度 (progress)。
+1. 使用者在首頁由 `AuthGate` 元件進行登入／註冊：
+   - **註冊**：輸入 Email + 密碼 建立帳號  
+   - **登入**：使用 Email + 密碼驗證
+   - 提供「忘記密碼」功能，會寄出重設連結
 
-主應用:
+2. 首次登入成功後，會導向 `ProfileSetup` 頁面：
+   - 填寫：**姓名 (`full_name`)**、**學校 (`school`)**、**年級 (`grade`)**
+   - 儲存於 Supabase 的 `profiles` 資料表中
 
-App.tsx 渲染主介面，包含「學習區」、「挑戰區」、「獎章區」等頁籤。
+3. Profile 完成後，進入主應用程式 `LearningQuestApp`。
 
-所有學習活動（如完成測驗、玩遊戲）的進度更新，都會透過 useProgress Hook 將資料即時同步回 Supabase。
-檔案結構 (重點)
+### 2. 資料載入與狀態管理
+
+- `AuthProvider`（`state/AuthContext.tsx`）負責：
+  - 監聽 Supabase Auth 狀態
+  - 取得當前使用者資料與進度
+
+- `useProgress`（`state/progress.ts`）負責：
+  - 從 `profiles.progress` 讀取學習進度（JSONB）
+  - 建立本地 `Progress` 狀態（byUnit / stats / badges / totalXP）
+  - 任何進度更新（XP、星等、徽章）都會自動：
+    - 更新 React 狀態
+    - 同步回 Supabase（雲端儲存）
+
+### 3. 主應用畫面結構
+
+`App.tsx` 主要提供四個分頁：
+
+- **學習區（Learn）**
+  - 單字（Vocab）：單字集、貪吃蛇遊戲
+  - 文法（Grammar）：文法說明、文法俄羅斯方塊
+  - 課文（Text）：課文故事閱讀、句子排列遊戲
+- **挑戰區（Challenge）**
+  - 每單元最多 10 關，每關 10 題
+  - 依星等解鎖下一關（通常 2 星以上解鎖）
+- **獎章區（Badges）**
+  - 顯示 30 枚徽章，依類別（參與 / 技巧 / 鼓勵）分類
+  - 每枚徽章有「未解鎖／銅／銀／金」四個等級
+- **排行榜（Leaderboard）**
+  - 顯示遊戲相關成績（目前主要針對小遊戲與挑戰的表現）
+  - 後端使用 Supabase 儲存與查詢分數
+
+---
+
+## 檔案結構（重點）
+
+```text
 src/
 ├─ components/
-│  ├─ AuthGate.tsx             # (已移至 App.tsx) 登入畫面
 │  ├─ ProfileSetup.tsx         # 首次登入的個人資料設定頁面
-│  ├─ SnakeChallenge.tsx       # 貪吃蛇遊戲 (成績會同步至後端)
-│  ├─ ReorderSentenceGame.tsx  # 俄羅斯方塊文法遊戲
-│  └─ ... (其他遊戲與 UI 元件)
+│  ├─ SnakeChallenge.tsx       # 貪吃蛇遊戲（會回報成績與用時）
+│  ├─ ReorderSentenceGame.tsx  # 俄羅斯方塊式文法句子重組遊戲
+│  ├─ StoryViewer.tsx          # 課文雙語閱讀元件
+│  ├─ ArrangeSentencesGame.tsx # 句子排列遊戲
+│  ├─ BadgesView.tsx           # 徽章展示頁面（30 枚徽章分類顯示）
+│  ├─ Leaderboard.tsx          # 排行榜畫面
+│  └─ ... 其他 UI 與小元件
 │
 ├─ data/
-│  └─ units.ts                 # 核心教材資料 (單字、文法、課文)
+│  └─ units.ts                 # 核心教材資料（單字、文法、課文）
 │
 ├─ lib/
-│  └─ questionGen.ts           # 題目自動生成器
+│  └─ questionGen.ts           # 題目自動生成器（例如單字四選一）
 │
 ├─ state/
-│  ├─ AuthContext.tsx          # 管理使用者登入狀態與個人資料
-│  └─ progress.ts              # 核心狀態管理 Hook (useProgress)，與 Supabase 同步
+│  ├─ AuthContext.tsx          # 使用者登入狀態與個人資料
+│  └─ progress.ts              # 核心狀態管理 Hook（useProgress），含徽章系統
 │
 ├─ supabaseClient.ts           # Supabase 連線設定
 ├─ types.ts                    # 全域 TypeScript 型別定義
-├─ App.tsx                     # 主應用程式：路由、頁面切換與狀態整合
+├─ App.tsx                     # 主應用程式：頁籤切換與學習流程
 └─ main.tsx                    # 應用程式入口，掛載 AuthProvider
-後端設定 (Supabase)
-本專案使用 Supabase 處理使用者認證與資料儲存。若要自行架設，請完成以下步驟：
+
+後端設定（Supabase）
+
+本專案使用 Supabase 處理使用者認證與資料儲存。若要自行架設，請依下列步驟：
 
 1. 建立 Supabase 專案
-前往 Supabase 建立一個新專案。
+
+前往 Supabase
+ 建立專案。
 
 2. 設定環境變數
-在專案根目錄建立一個 .env.local 檔案，並填入您 Supabase 專案的 URL 和 anon 金鑰：
 
-VITE_SUPABASE_URL="您的 Supabase Project URL"
-VITE_SUPABASE_ANON_KEY="您的 Supabase anon public 金鑰"
-3. 執行 SQL 建立資料表
-登入您的 Supabase 專案，前往 "SQL Editor"，並執行以下指令碼以建立 profiles 資料表、設定安全策略及使用者註冊觸發器。
+在專案根目錄建立 .env.local 檔案，填入下列內容：
 
-SQL
+VITE_SUPABASE_URL="你的 Supabase Project URL"
+VITE_SUPABASE_ANON_KEY="你的 Supabase anon public 金鑰"
+
+3. 建立資料表與觸發器
+
+在 Supabase 專案的 SQL Editor 執行以下 SQL：
 
 -- 1. Profiles Table: 儲存使用者個人資料與學習進度
 CREATE TABLE public.profiles (
@@ -96,7 +147,7 @@ CREATE POLICY "Users can update their own profile."
   USING (auth.uid() = id)
   WITH CHECK (auth.uid() = id);
 
--- 3. 建立觸發器，在新使用者註冊時自動建立 profile
+-- 3. 建立觸發器：當有新使用者註冊時，自動建立對應的 profile
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -109,54 +160,213 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
-核心功能
-1. 使用者系統
-無密碼登入: 透過 Email 魔法連結進行安全驗證。
 
-個人資料設定: 新使用者首次登入需設定姓名、學校、年級。
+進度與徽章系統（Progress & Badge System）
+1. Progress 資料結構（簡要）
 
-雲端進度同步: 所有學習進度（XP、星等、徽章、遊戲分數）都會自動儲存到使用者的雲端帳戶。
+在 state/progress.ts 中，系統使用下列結構管理學習進度：
 
-2. 學習區
-單字: 包含單字卡瀏覽、發音、語音跟讀練習 (VocabSet) 及貪吃蛇遊戲 (SnakeChallenge)。
+type UnitProgress = {
+  stars: number; // 該單元 0–3 星
+  xp: number;
+  vocab: { studied: number; quizBest: number };
+  grammar: { studied: number; reorderBest: number };
+  text: { read: number; arrangeBest: number };
+  challenge: {
+    clearedLevels: number;
+    bestTimeSec: number;
+    bestScore: number;
+    levels: Record<number, { bestScore: number; bestTimeSec: number; stars: number }>;
+  };
+};
 
-文法: 提供文法重點說明 (GrammarExplain) 與結合遊戲機制的「俄羅斯方塊」句子重組練習 (ReorderSentenceGame)。
+type UserStats = {
+  totalLogins: number;
+  totalTimeSec: number;
+  totalErrors: number;
+  totalHints: number;
+  totalRetries: number;
+  gamesPlayed: number;
+  perfectRuns: number;
+  storiesRead: number;
+  longSessions: number;
+  closeCalls: number;
+  comebackRuns: number;
+  failedChallenges: number;
+};
 
-課文: 支援中英雙語對照閱讀 (StoryViewer) 與句子排列遊戲 (ArrangeSentencesGame)。
+type Progress = {
+  byUnit: Record<UnitId, UnitProgress>;
+  badges: Record<string, { tier: BadgeTier; unlockedAt?: string }>;
+  stats: UserStats;
+  totalXP: number;
+};
 
-3. 挑戰區
-可設定多個關卡，每個關卡包含 10 道題目。
 
-關卡解鎖機制: 需在前一關卡獲得至少 2 星才能解鎖下一關。
+這個 Progress 物件會以 JSONB 形式存進 profiles.progress 欄位，並在登入時自動載入、合併預設值。
 
-成績與星等: 根據答對題數計算星等（例如 10/7/4 題對應 3/2/1 星）。
+2. 資料驅動的徽章系統
 
-4. 遊戲機制更新 (2025/10/16)
-貪吃蛇 (SnakeChallenge)
+新版徽章系統採用「**資料驅動（data-driven）」的方式：
 
-移除倒數計時，改為記錄總遊玩秒數。
+共 30 枚徽章，分為 3 類：
 
-結束條件：撞牆、撞到自己、或完成所有題目。
+參與類 Participation：10 枚
 
-每輪最多 78 題，正解不重複。
+技巧類 Skill：10 枚
 
-遊戲結束時會上報詳細數據，並觸發全域事件 learning-quest:snake-report。
+鼓勵類 Encouragement：10 枚
 
-俄羅斯方塊 (ReorderSentenceGame)
+每枚徽章具有 4 個等級 (BadgeTier)：
 
-題庫範圍擴大至所有文法例句。
+0：未解鎖（🔒）
 
-回合結束時觸發全域事件 learning-quest:grammar-tetris-report。
+1：銅級（🥉）
 
-完成超過 80 回合可解鎖 SUPER_GRAMMAR_EXPERT 徽章。
+2：銀級（🥈）
+
+3：金級（🥇）
+
+徽章定義集中在 BADGE_QR：
+
+export const BADGE_QR: Record<string, {
+  type: 'participation' | 'skill' | 'encouragement';
+  thresholds: [number, number, number]; // 銅、銀、金門檻
+  reverse?: boolean; // true 表示「數值越小越好」（例如完成時間）
+}>
+
+3. 行為統計：reportActivity 流程
+
+所有學習活動（單字集、課文閱讀、小遊戲、挑戰關卡）在完成時都會呼叫：
+
+reportActivity({
+  gamesPlayed: 1,
+  totalTimeSec: timeUsed,
+  totalErrors: wrongCount,
+  perfectRuns: isPerfect ? 1 : 0,
+  // ...其他需要的欄位
+});
+
+
+reportActivity 會：
+
+將這些數值累加到 progress.stats
+
+呼叫 evaluateBadges(progress)，根據最新的 UserStats 與各單元成績，重新評估 30 枚徽章的等級
+
+若有徽章升級，更新 progress.badges，並記錄 unlockedAt 時間戳
+
+4. BadgesView 顯示
+
+components/BadgesView.tsx 會依照：
+
+類別（參與 / 技巧 / 鼓勵）分區顯示
+
+每個徽章顯示：
+
+中文名稱（例如：持之以恆、貪吃蛇王、逆轉勝…）
+
+簡短描述
+
+目前等級（未解鎖／銅／銀／金）
+
+下一級的目標值提示（例如「目標：10」）
+
+這個設計兼顧：
+
+可讀性（給學生與老師看）
+
+可維護性（未來修改門檻或新增徽章時，只需調整定義與統計來源）
+
+學習區與遊戲機制
+1. 學習區（Learn）
+
+單字 Vocab
+
+VocabSet：單字卡瀏覽與基本練習，完成一次可獲得 XP 並記錄「單字練習次數」
+
+SnakeChallenge：貪吃蛇式單字遊戲
+
+根據作答記錄：
+
+回報作答數、正確數、錯誤數、使用時間
+
+更新 vocab.quizBest 與徽章統計（如 gamesPlayed、totalErrors、perfectRuns）
+
+文法 Grammar
+
+GrammarExplain：文法重點說明，閱讀後可獲得 XP 並記錄「文法學習次數」
+
+ReorderSentenceGame：將句子以俄羅斯方塊方式重組
+
+完成回合後，會更新：
+
+grammar.reorderBest
+
+gamesPlayed、perfectRuns、totalErrors 等統計
+
+課文 Text
+
+StoryViewer：課文中英雙語閱讀，閱讀一次會：
+
+增加 XP
+
+更新 text.read
+
+更新 storiesRead（用來觸發故事類徽章，如 STORY_FAN）
+
+ArrangeSentencesGame：將課文句子打散後要求學生重新排列
+
+完成後更新：
+
+text.arrangeBest
+
+perfectRuns / totalErrors 等統計
+
+2. 挑戰區（Challenge）
+
+每單元預設 10 關，每關約 10 題選擇題
+
+星等計算（預設）：
+
+10 題全對：3 星
+
+≥ 7 題：2 星
+
+≥ 4 題：1 星
+
+解鎖規則：
+
+通過一關（通常 2 星以上），才會解鎖下一關
+
+結束時會呼叫 handleChallengeFinish：
+
+更新單元內部 challenge.levels[level]
+
+更新以下統計：
+
+gamesPlayed
+
+totalTimeSec
+
+perfectRuns / failedChallenges
+
+longSessions（例如遊玩 ≥ 20 分鐘）
+
+comebackRuns（比過去最佳成績進步 ≥ 3 分）
+
+closeCalls（剛好及格）
+
+totalErrors
+
+這些統計會被徽章系統用來頒發例如「馬拉松」、「逆轉勝」、「倖存者」等鼓勵類徽章。
 
 安裝與開發
 環境需求
+
 Node.js 20.19+
 
-開發命令
-Bash
-
+常用指令
 # 安裝依賴
 npm install
 
@@ -168,11 +378,37 @@ npm run build
 
 # 預覽建置後的專案
 npm run preview
+
 未來方向
-建立排行榜: 實作排行榜頁面，顯示各遊戲（貪吃蛇、俄羅斯方塊）的最高分排名。
 
-新增登出功能: 在介面中提供一個登出按鈕。
+排行榜擴充
 
-學習分析: 記錄錯題類型、作答時間，生成個人化的複習建議。
+目前已實作基本排行榜頁面，未來可新增：
 
-更多小遊戲: 擴充更多樣的遊戲化練習模式。
+不同遊戲／單元的子排行榜
+
+依學校、班級或年級篩選
+
+登出與帳號管理 UI
+
+目前已有 Supabase Auth，未來可加入：
+
+前端明確的「登出」按鈕
+
+帳號資訊檢視／修改介面
+
+學習分析（Learning Analytics）
+
+以現有 UserStats 與 Progress 為基礎：
+
+紀錄錯題類型、作答時間分布
+
+自動產生個人化複習建議
+
+結合 SRL（自我調整學習）相關量表或反思機制
+
+更多小遊戲與徽章變體
+
+新增其他型態的遊戲（例如聽力、拼字、對話選擇）
+
+實驗不同的徽章呈現方式（例如概念圖式 Badge Tree、學習者自訂徽章條件）
