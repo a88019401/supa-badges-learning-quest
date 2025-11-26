@@ -68,39 +68,19 @@ export const BADGE_QR: Record<
   string,
   { type: "participation" | "skill" | "encouragement"; thresholds: [number, number, number]; reverse?: boolean }
 > = {
-  // 參與類 Participation —— 短期實驗版（2–3 次實驗、單一單元也能拿得到）
+  // 參與類 Participation —— 只要願意做就有
+  LOGIN_STREAK:   { type: "participation", thresholds: [1, 5, 20] },          // 總登入次數
+  TIME_KEEPER:    { type: "participation", thresholds: [600, 3600, 18000] }, // 累積時間：10 分 / 1 小時 / 5 小時
+  STORY_FAN:      { type: "participation", thresholds: [1, 5, 15] },         // 閱讀故事
+  GAME_LOVER:     { type: "participation", thresholds: [5, 20, 50] },        // 遊玩小遊戲次數
+  VOCAB_DRILLER:  { type: "participation", thresholds: [3, 10, 30] },        // 單字練習次數
+  GRAMMAR_NERD:   { type: "participation", thresholds: [3, 10, 30] },        // 文法練習次數
+  XP_COLLECTOR:   { type: "participation", thresholds: [100, 500, 2000] },   // 累積 XP
+  UNIT_EXPLORER:  { type: "participation", thresholds: [1, 3, 6] },          // 解鎖單元數
+  CLICK_MASTER:   { type: "participation", thresholds: [50, 200, 1000] },    // 互動總數（以 gamesPlayed + hints 等近似）
+  REVIEWER:       { type: "participation", thresholds: [2, 10, 20] },        // 複習（重複遊玩）
 
-  // 1. 任務參與者：看「總學習／遊戲行為次數」
-  LOGIN_STREAK:   { type: "participation", thresholds: [3, 8, 15] },
-
-  // 2. 練習場次：看「完成的遊戲／測驗場數」
-  TIME_KEEPER:    { type: "participation", thresholds: [1, 3, 6] },
-
-  // 3. 故事迷：課文閱讀次數
-  STORY_FAN:      { type: "participation", thresholds: [1, 3, 5] },
-
-  // 4. 遊戲玩家：遊戲化活動參與次數
-  GAME_LOVER:     { type: "participation", thresholds: [3, 6, 10] },
-
-  // 5. 單字練習者：單字學習次數
-  VOCAB_DRILLER:  { type: "participation", thresholds: [1, 3, 6] },
-
-  // 6. 文法練習者：文法學習次數
-  GRAMMAR_NERD:   { type: "participation", thresholds: [1, 3, 6] },
-
-  // 7. 經驗收藏家：累積 XP
-  XP_COLLECTOR:   { type: "participation", thresholds: [50, 150, 300] },
-
-  // 8. 活動探索者：接觸過幾種類型活動（單字 / 文法 / 課文 / 挑戰）
-  UNIT_EXPLORER:  { type: "participation", thresholds: [1, 3, 4] },
-
-  // 9. 行動派：互動總數（遊戲 + 故事 + 提示）
-  CLICK_MASTER:   { type: "participation", thresholds: [5, 10, 20] },
-
-  // 10. 溫故知新：重複遊玩／測驗場次
-  REVIEWER:       { type: "participation", thresholds: [2, 4, 8] },
-
-  // 技巧類 Skill —— 給高成就 / 實力導向的學生（維持原本設計）
+  // 技巧類 Skill —— 給高成就 / 實力導向的學生
   SNAKE_MASTER:   { type: "skill", thresholds: [10, 30, 60] },               // 貪吃蛇最高分
   TETRIS_ARCH:    { type: "skill", thresholds: [10, 40, 80] },               // 文法 Tetris 消行數
   QUIZ_SNIPER:    { type: "skill", thresholds: [1, 5, 10] },                 // 單字／關卡滿分次數
@@ -113,7 +93,7 @@ export const BADGE_QR: Record<
   LEVEL_CRUSHER:  { type: "skill", thresholds: [2, 10, 30] },                // 通過關卡總數
   UNIT_MASTER:    { type: "skill", thresholds: [1, 3, 6] },                  // 滿星單元數
 
-  // 鼓勵類 Encouragement —— 獎勵失敗、嘗試與堅持（維持原本設計）
+  // 鼓勵類 Encouragement —— 獎勵失敗、嘗試與堅持
   PERSISTENT:     { type: "encouragement", thresholds: [5, 20, 50] },        // 累積錯誤
   CURIOUS_MIND:   { type: "encouragement", thresholds: [3, 10, 30] },        // 使用提示
   NEVER_GIVE_UP:  { type: "encouragement", thresholds: [1, 5, 15] },         // 重試次數
@@ -215,63 +195,27 @@ function evaluateBadges(p: Progress): Progress {
     }
   };
 
-  // 1) Participation —— 短期實驗版
-
-  // 任務參與者：總學習／遊戲行為次數
-  const totalLearningActions =
-    units.reduce(
-      (acc, u) => acc + u.vocab.studied + u.grammar.studied + u.text.read,
-      0
-    ) +
-    s.gamesPlayed +
-    s.storiesRead;
-
-  update("LOGIN_STREAK", totalLearningActions);
-
-  // 練習場次：完成的遊戲／測驗場數
-  update("TIME_KEEPER", s.gamesPlayed);
-
-  // 故事迷：課文故事閱讀次數
+  // 1) Participation
+  update("LOGIN_STREAK", s.totalLogins);
+  update("TIME_KEEPER", s.totalTimeSec);
   update("STORY_FAN", s.storiesRead);
-
-  // 遊戲玩家：遊戲化活動參與次數
   update("GAME_LOVER", s.gamesPlayed);
-
-  // 單字練習者：單字學習次數
-  const totalVocabStudies = units.reduce(
-    (acc, u) => acc + u.vocab.studied,
-    0
+  update(
+    "VOCAB_DRILLER",
+    units.reduce((acc, u) => acc + u.vocab.studied, 0)
   );
-  update("VOCAB_DRILLER", totalVocabStudies);
-
-  // 文法練習者：文法學習次數
-  const totalGrammarStudies = units.reduce(
-    (acc, u) => acc + u.grammar.studied,
-    0
+  update(
+    "GRAMMAR_NERD",
+    units.reduce((acc, u) => acc + u.grammar.studied, 0)
   );
-  update("GRAMMAR_NERD", totalGrammarStudies);
-
-  // 經驗收藏家：累積 XP
   update("XP_COLLECTOR", p.totalXP);
-
-  // 活動探索者：接觸過幾種類型活動（單字 / 文法 / 課文 / 挑戰）
-  const hasVocab = units.some((u) => u.vocab.studied > 0);
-  const hasGrammar = units.some((u) => u.grammar.studied > 0);
-  const hasStory = units.some((u) => u.text.read > 0);
-  const hasChallenge = units.some((u) => u.challenge.clearedLevels > 0);
-  const exploredActivities =
-    (hasVocab ? 1 : 0) +
-    (hasGrammar ? 1 : 0) +
-    (hasStory ? 1 : 0) +
-    (hasChallenge ? 1 : 0);
-
-  update("UNIT_EXPLORER", exploredActivities);
-
-  // 行動派：互動總數（遊戲 + 故事 + 提示）
+  update(
+    "UNIT_EXPLORER",
+    units.filter((u) => u.xp > 0).length
+  );
   update("CLICK_MASTER", s.gamesPlayed + s.storiesRead + s.totalHints);
-
-  // 溫故知新：重複遊玩／測驗場次
   update("REVIEWER", s.gamesPlayed);
+
   // 2) Skill
   const maxSnake = Math.max(...units.map((u) => u.vocab.quizBest), 0);
   const maxTetris = Math.max(...units.map((u) => u.grammar.reorderBest), 0);
@@ -292,8 +236,18 @@ function evaluateBadges(p: Progress): Progress {
   );
   update("CHALLENGE_KING", challengeFullMarks);
 
-  const totalStars = units.reduce((acc, u) => acc + u.stars, 0);
-  update("STAR_CATCHER", totalStars);
+  //刪除單元星星總數獎章
+  //const totalStars = units.reduce((acc, u) => acc + u.stars, 0);
+  //update("STAR_CATCHER", totalStars);
+  // ⭐ 這裡改成挑戰區星星
+  const challengeStars = units.reduce((acc, u) => {
+    const levelStars = Object.values(u.challenge.levels || {}).reduce(
+      (sum, lv) => sum + (lv.stars ?? 0),
+      0
+    );
+    return acc + levelStars;
+  }, 0);
+  update("STAR_CATCHER", challengeStars);
 
   const arrangeFullMarks = units.reduce(
     (acc, u) => acc + (u.text.arrangeBest >= 10 ? 1 : 0),

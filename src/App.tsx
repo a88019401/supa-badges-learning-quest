@@ -785,7 +785,7 @@ function LearningQuestApp() {
         </div>
 
         {/* 單元選擇 */}
-        <Card>
+{/*         <Card>
           <SectionTitle title={`選擇單元 (共 ${UNITS.length})`} />
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
             {UNITS.map((u) => (
@@ -808,13 +808,13 @@ function LearningQuestApp() {
                   }`}
               >
                 <div className="text-xs opacity-80">Unit {u.id}</div>
-                <div className="font-semibold truncate">
-                  {u.title.replace(/^Unit \d+:\s*/, "")}
-                </div>
-              </button>
-            ))}
-          </div>
-        </Card>
+                <div className="font-semibold truncate">*/}
+                  {/* {u.title.replace(/^Unit \d+:\s這邊要加上星星*和斜線/與逗點, */}{/*"")} */}
+                 {/*</div>
+              </button>*/}
+            {/*))}*/}
+            {/*</div>*/}
+         {/* </Card> */}
 
         {/* 主區域 */}
         <div className="mt-4 space-y-4">
