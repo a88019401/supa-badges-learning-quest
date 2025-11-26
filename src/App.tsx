@@ -531,11 +531,14 @@ export default function App() {
 function LearningQuestApp() {
   // 頁籤 / 視圖狀態
   const [tab, setTab] = useState<Tab>("learn");
-  const [unitId, setUnitId] = useState<UnitId>(1);
+  const [unitId] = useState<UnitId>(1);
   const [sub, setSub] = useState<LearnSubTab>("vocab");
   const [vocabView, setVocabView] = useState<VocabView>("set");
   const [grammarView, setGrammarView] = useState<GrammarView>("explain");
   const [textView, setTextView] = useState<TextView>("story");
+
+  // 進入 learn 分頁的時間（毫秒 timestamp）
+  const [learnEnterAt, setLearnEnterAt] = useState<number | null>(null);
 
   // 挑戰區
   const [mode, setMode] = useState<ChallengeMode>("select");
@@ -549,10 +552,9 @@ function LearningQuestApp() {
     patchUnit,
     reportActivity,
     reportGrammarTetris,
-    reportSnake,
     reset,
-    loadingProgress,
   } = useProgress();
+
 
   const uProg = progress.byUnit[unitId];
   // ✅ 監聽 grammar-tetris-report 事件，交給 progress 判斷是否要頒發 SUPER_GRAMMAR_EXPERT
@@ -576,7 +578,26 @@ function LearningQuestApp() {
         onReport as EventListener
       );
   }, [reportGrammarTetris]);
-
+  // 在「學習區 tab」待久一點，算一次 longSessions
+  useEffect(() => {
+    if (tab === "learn") {
+      // 剛切到 learn，開始計時
+      if (!learnEnterAt) {
+        setLearnEnterAt(Date.now());
+      }
+    } else {
+      // 離開 learn，如果有待過一段時間，就記錄一次 longSessions
+      if (learnEnterAt) {
+        const stayMs = Date.now() - learnEnterAt;
+        const stayMinutes = stayMs / 1000 / 60;
+        if (stayMinutes >= 20) {
+          // 待滿 20 分鐘就 +1（你可以改成 10 分鐘）
+          reportActivity({ longSessions: 1 });
+        }
+        setLearnEnterAt(null);
+      }
+    }
+  }, [tab, learnEnterAt, reportActivity]);
   /*
   // 監聽貪吃蛇成績，達 78 分即頒發 SNAKE_KING
   useEffect(() => {
@@ -643,14 +664,15 @@ function LearningQuestApp() {
 
     // === 回報統計，讓獎章系統運作 ===
     reportActivity({
+      isGame: true,
       gamesPlayed: 1,
       totalTimeSec: timeUsed,
       perfectRuns: score === 10 ? 1 : 0,
       failedChallenges: !passed ? 1 : 0,
       comebackRuns: improvedALot ? 1 : 0,
       closeCalls: isCloseCall ? 1 : 0,
-      longSessions: isLongSession ? 1 : 0,
-      totalErrors: Math.max(0, 10 - score), // 粗略估計錯題數
+      longSessions: isLongSession ? 1 : 0, // 長時間挑戰也算一次 longSessions
+      totalErrors: Math.max(0, 10 - score),
     });
 
     // === 原本的進度更新邏輯 ===
@@ -785,7 +807,7 @@ function LearningQuestApp() {
         </div>
 
         {/* 單元選擇 */}
-{/*         <Card>
+        {/*         <Card>
           <SectionTitle title={`選擇單元 (共 ${UNITS.length})`} />
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
             {UNITS.map((u) => (
@@ -809,12 +831,12 @@ function LearningQuestApp() {
               >
                 <div className="text-xs opacity-80">Unit {u.id}</div>
                 <div className="font-semibold truncate">*/}
-                  {/* {u.title.replace(/^Unit \d+:\s這邊要加上星星*和斜線/與逗點, */}{/*"")} */}
-                 {/*</div>
+        {/* {u.title.replace(/^Unit \d+:\s這邊要加上星星*和斜線/與逗點, */}{/*"")} */}
+        {/*</div>
               </button>*/}
-            {/*))}*/}
-            {/*</div>*/}
-         {/* </Card> */}
+        {/*))}*/}
+        {/*</div>*/}
+        {/* </Card> */}
 
         {/* 主區域 */}
         <div className="mt-4 space-y-4">
@@ -911,11 +933,13 @@ function LearningQuestApp() {
                           ...uProg.vocab,
                           studied: uProg.vocab.studied + 1,
                         },
+                      });
 
-                      });                        // 參與類：單字練習 +1
-                        reportActivity({ gamesPlayed: 1 });
+                      // 單字研讀 = 學習行為，會中斷遊戲連續 Streak
+                      reportActivity({ isLearn: true });
                     }}
                   />
+
                 ) : vocabView === "snake" ? (
                   <SnakeChallenge
                     key={`snake-learn-${unitId}`}
@@ -949,6 +973,7 @@ function LearningQuestApp() {
                           tag: "vocab",
                         };
                       });
+                      const isPerfect = r.correct === r.totalQuestions;
 
                       setModalData({
                         title: r.title || `單字練習：貪吃蛇`,
@@ -961,10 +986,12 @@ function LearningQuestApp() {
                       });
                       setModalOpen(true);
                       reportActivity({
+                        isGame: true,
                         gamesPlayed: 1,
                         totalTimeSec: r.usedTime,
                         totalErrors: r.wrong,
-                        perfectRuns: r.correct === r.total ? 1 : 0,
+                        perfectRuns: isPerfect ? 1 : 0,
+                        snakeCorrectTotal: r.correct, // 🔸 給 ACCURACY_GOD 用
                       });
                     }}
                   />
@@ -983,6 +1010,7 @@ function LearningQuestApp() {
                         },
                       });
                       reportActivity({
+                        isGame: true,
                         gamesPlayed: 1,
                         perfectRuns: score === 10 ? 1 : 0,
                         totalErrors: Math.max(0, 10 - score),
@@ -1004,9 +1032,12 @@ function LearningQuestApp() {
                           studied: uProg.grammar.studied + 1,
                         },
                       });
-                      reportActivity({ gamesPlayed: 1 });
+
+                      // 文法研讀 = 學習行為
+                      reportActivity({ isLearn: true });
                     }}
                   />
+
                 ) : (
                   <ReorderSentenceGame
                     targets={unit.grammar.flatMap((g) => g.examples ?? [])}
@@ -1022,6 +1053,8 @@ function LearningQuestApp() {
                         },
                       });
                       reportActivity({
+                        isGame: true,
+
                         gamesPlayed: 1,
                         perfectRuns: score === 10 ? 1 : 0,
                         totalErrors: Math.max(0, 10 - score),
@@ -1035,38 +1068,47 @@ function LearningQuestApp() {
                 (textView === "story" ? (
                   <StoryViewer
                     story={unit.story}
+                      readCount={uProg.text.read}
+
                     onRead={() => {
                       addXP(unitId, 5);
                       patchUnit(unitId, {
                         text: { ...uProg.text, read: uProg.text.read + 1 },
                       });
-                      reportActivity({ storiesRead: 1 });
-                    }}
-                  />
-                ) : (
-                  <ArrangeSentencesGame
-                    sentences={unit.story.sentencesForArrange}
-                    onFinished={(correct) => {
-                      addXP(unitId, correct);
-                      patchUnit(unitId, {
-                        text: {
-                          ...uProg.text,
-                          arrangeBest: Math.max(
-                            uProg.text.arrangeBest,
-                            correct
-                          ),
-                        },
-                      });
 
+                      // 完成故事閱讀 = 學習行為 + STORY_FAN 次數
                       reportActivity({
-                        gamesPlayed: 1,
-                        perfectRuns:
-                          correct === unit.story.sentencesForArrange.length ? 1 : 0,
-                        totalErrors:
-                          unit.story.sentencesForArrange.length - correct,
+                        isLearn: true,
+                        storiesRead: 1,
                       });
                     }}
                   />
+
+                ) : (
+<ArrangeSentencesGame
+  sentences={unit.story.sentencesForArrange}
+  onFinished={(correct) => {
+    const total = unit.story.sentencesForArrange.length;
+    const isPerfectArrange = correct === total;
+
+    addXP(unitId, correct);
+    patchUnit(unitId, {
+      text: {
+        ...uProg.text,
+        arrangeBest: Math.max(uProg.text.arrangeBest, correct),
+      },
+    });
+
+    reportActivity({
+      isGame: true,
+      gamesPlayed: 1,
+      perfectRuns: isPerfectArrange ? 1 : 0,
+      arrangePerfectRuns: isPerfectArrange ? 1 : 0, // 給 ARRANGE_PRO 用
+      totalErrors: total - correct,
+    });
+  }}
+/>
+
                 ))}
             </>
           )}

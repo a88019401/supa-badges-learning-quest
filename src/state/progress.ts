@@ -51,6 +51,19 @@ export type UserStats = {
   closeCalls: number;       // 險勝（剛好及格）的次數
   comebackRuns: number;     // 成績大幅進步的次數
   failedChallenges: number; // 挑戰失敗次數
+  // === 新增的統計欄位 ===
+
+  /** 目前連續玩遊戲的場數（切去學習就歸 0） */
+  currentGameStreak: number;
+
+  /** 曾經達到過的最大連續遊戲場數（用來判斷 GAME_LOVER） */
+  maxGameStreak: number;
+
+  /** 句子排列遊戲獲得「滿分」的累積次數（ARRANGE_PRO 用） */
+  arrangePerfectRuns: number;
+
+  /** 貪吃蛇中吃到正確單字的累積總數（ACCURACY_GOD 用） */
+  snakeCorrectTotal: number;
 };
 
 export type Progress = {
@@ -69,41 +82,41 @@ export const BADGE_QR: Record<
   { type: "participation" | "skill" | "encouragement"; thresholds: [number, number, number]; reverse?: boolean }
 > = {
   // 參與類 Participation —— 只要願意做就有
-  LOGIN_STREAK:   { type: "participation", thresholds: [1, 5, 20] },          // 總登入次數
-  TIME_KEEPER:    { type: "participation", thresholds: [600, 3600, 18000] }, // 累積時間：10 分 / 1 小時 / 5 小時
-  STORY_FAN:      { type: "participation", thresholds: [1, 5, 15] },         // 閱讀故事
-  GAME_LOVER:     { type: "participation", thresholds: [5, 20, 50] },        // 遊玩小遊戲次數
-  VOCAB_DRILLER:  { type: "participation", thresholds: [3, 10, 30] },        // 單字練習次數
-  GRAMMAR_NERD:   { type: "participation", thresholds: [3, 10, 30] },        // 文法練習次數
-  XP_COLLECTOR:   { type: "participation", thresholds: [100, 500, 2000] },   // 累積 XP
-  UNIT_EXPLORER:  { type: "participation", thresholds: [1, 3, 6] },          // 解鎖單元數
-  CLICK_MASTER:   { type: "participation", thresholds: [50, 200, 1000] },    // 互動總數（以 gamesPlayed + hints 等近似）
-  REVIEWER:       { type: "participation", thresholds: [2, 10, 20] },        // 複習（重複遊玩）
+  LOGIN_STREAK: { type: "participation", thresholds: [1, 5, 20] },          // 總登入次數
+  TIME_KEEPER: { type: "participation", thresholds: [180, 480, 900] },  // 累積時間：3 分 / 8 小時 / 15 小時
+STORY_FAN: { type: "participation", thresholds: [1, 5, 10] }, // 完整閱讀故事 1 / 5 / 10 次
+  GAME_LOVER: { type: "participation", thresholds: [3, 6, 10] },        // 遊玩小遊戲次數
+  VOCAB_DRILLER: { type: "participation", thresholds: [3, 10, 30] },        // 單字練習次數
+  GRAMMAR_NERD: { type: "participation", thresholds: [3, 10, 30] },        // 文法練習次數
+  XP_COLLECTOR: { type: "participation", thresholds: [100, 500, 2000] },   // 累積 XP
+  UNIT_EXPLORER: { type: "participation", thresholds: [1, 3, 6] },          // 解鎖單元數
+  CLICK_MASTER: { type: "participation", thresholds: [50, 200, 1000] },    // 互動總數（以 gamesPlayed + hints 等近似）
+  REVIEWER: { type: "participation", thresholds: [2, 10, 20] },        // 複習（重複遊玩）
 
   // 技巧類 Skill —— 給高成就 / 實力導向的學生
-  SNAKE_MASTER:   { type: "skill", thresholds: [10, 30, 60] },               // 貪吃蛇最高分
-  TETRIS_ARCH:    { type: "skill", thresholds: [10, 40, 80] },               // 文法 Tetris 消行數
-  QUIZ_SNIPER:    { type: "skill", thresholds: [1, 5, 10] },                 // 單字／關卡滿分次數
+  SNAKE_MASTER: { type: "skill", thresholds: [10, 30, 60] },               // 貪吃蛇最高分
+  TETRIS_ARCH: { type: "skill", thresholds: [10, 40, 80] },               // 文法 Tetris 消行數
+  QUIZ_SNIPER: { type: "skill", thresholds: [1, 5, 10] },                 // 單字／關卡滿分次數
   // 秒數越少越好：銅 50s、銀 40s、金 30s
-  SPEED_DEMON:    { type: "skill", thresholds: [50, 40, 30], reverse: true },
+  SPEED_DEMON: { type: "skill", thresholds: [50, 40, 30], reverse: true },
   CHALLENGE_KING: { type: "skill", thresholds: [1, 5, 10] },                 // 挑戰模式滿分關數
-  STAR_CATCHER:   { type: "skill", thresholds: [3, 9, 18] },                 // 總星星數
-  ARRANGE_PRO:    { type: "skill", thresholds: [1, 5, 10] },                 // 排列句子滿分次數
-  ACCURACY_GOD:   { type: "skill", thresholds: [5, 15, 30] },                // 高準確率通關次數（以 perfectRuns 代理）
-  LEVEL_CRUSHER:  { type: "skill", thresholds: [2, 10, 30] },                // 通過關卡總數
-  UNIT_MASTER:    { type: "skill", thresholds: [1, 3, 6] },                  // 滿星單元數
+  STAR_CATCHER: { type: "skill", thresholds: [3, 9, 18] },                 // 總星星數
+  ARRANGE_PRO: { type: "skill", thresholds: [1, 5, 10] },                 // 排列句子滿分次數
+  ACCURACY_GOD: { type: "skill", thresholds: [5, 15, 30] },                // 高準確率通關次數（以 perfectRuns 代理）
+  LEVEL_CRUSHER: { type: "skill", thresholds: [2, 10, 30] },                // 通過關卡總數
+  UNIT_MASTER: { type: "skill", thresholds: [1, 3, 6] },                  // 滿星單元數
 
   // 鼓勵類 Encouragement —— 獎勵失敗、嘗試與堅持
-  PERSISTENT:     { type: "encouragement", thresholds: [5, 20, 50] },        // 累積錯誤
-  CURIOUS_MIND:   { type: "encouragement", thresholds: [3, 10, 30] },        // 使用提示
-  NEVER_GIVE_UP:  { type: "encouragement", thresholds: [1, 5, 15] },         // 重試次數
-  MARATHONER:     { type: "encouragement", thresholds: [1, 3, 10] },         // 長時間學習次數
-  TRY_HARD:       { type: "encouragement", thresholds: [10, 50, 100] },      // 總嘗試數（遊戲 + 重試）
-  SLOW_STEADY:    { type: "encouragement", thresholds: [1, 5, 10] },         // 穩紮穩打（這裡以 longSessions 近似）
-  COMEBACK_KID:   { type: "encouragement", thresholds: [1, 3, 5] },          // 逆轉勝
-  PRACTICE_MAKE:  { type: "encouragement", thresholds: [5, 15, 30] },        // 練習次數（遊戲數）
-  BRAVE_HEART:    { type: "encouragement", thresholds: [1, 5, 10] },         // 挑戰失敗次數
-  SURVIVOR:       { type: "encouragement", thresholds: [1, 3, 5] },          // 低空飛過次數
+  PERSISTENT: { type: "encouragement", thresholds: [5, 20, 50] },        // 累積錯誤
+  CURIOUS_MIND: { type: "encouragement", thresholds: [3, 10, 30] },        // 使用提示
+  NEVER_GIVE_UP: { type: "encouragement", thresholds: [1, 5, 15] },         // 重試次數
+  MARATHONER: { type: "encouragement", thresholds: [1, 3, 10] },         // 長時間學習次數
+  TRY_HARD: { type: "encouragement", thresholds: [10, 50, 100] },      // 總嘗試數（遊戲 + 重試）
+  SLOW_STEADY: { type: "encouragement", thresholds: [1, 5, 10] },         // 穩紮穩打（這裡以 longSessions 近似）
+  COMEBACK_KID: { type: "encouragement", thresholds: [1, 3, 5] },          // 逆轉勝
+  PRACTICE_MAKE: { type: "encouragement", thresholds: [5, 15, 30] },        // 練習次數（遊戲數）
+  BRAVE_HEART: { type: "encouragement", thresholds: [1, 5, 10] },         // 挑戰失敗次數
+  SURVIVOR: { type: "encouragement", thresholds: [1, 3, 5] },          // 低空飛過次數
 };
 
 // === 預設值 ===
@@ -146,6 +159,12 @@ const defaultProgress = (): Progress => ({
     closeCalls: 0,
     comebackRuns: 0,
     failedChallenges: 0,
+
+
+    currentGameStreak: 0,
+    maxGameStreak: 0,
+    arrangePerfectRuns: 0,
+    snakeCorrectTotal: 0,
   },
   totalXP: 0,
 });
@@ -199,7 +218,8 @@ function evaluateBadges(p: Progress): Progress {
   update("LOGIN_STREAK", s.totalLogins);
   update("TIME_KEEPER", s.totalTimeSec);
   update("STORY_FAN", s.storiesRead);
-  update("GAME_LOVER", s.gamesPlayed);
+  // GAME_LOVER：改用「最大連續遊玩次數」而不是總場數
+  update("GAME_LOVER", s.maxGameStreak);
   update(
     "VOCAB_DRILLER",
     units.reduce((acc, u) => acc + u.vocab.studied, 0)
@@ -247,15 +267,19 @@ function evaluateBadges(p: Progress): Progress {
     );
     return acc + levelStars;
   }, 0);
+
   update("STAR_CATCHER", challengeStars);
+  update("UNIT_MASTER", challengeStars);
 
-  const arrangeFullMarks = units.reduce(
-    (acc, u) => acc + (u.text.arrangeBest >= 10 ? 1 : 0),
-    0
-  );
-  update("ARRANGE_PRO", arrangeFullMarks);
 
-  update("ACCURACY_GOD", s.perfectRuns);
+  // const arrangeFullMarks = units.reduce(
+  //   (acc, u) => acc + (u.text.arrangeBest >= 10 ? 1 : 0),
+  //   0
+  // );
+  // update("ARRANGE_PRO", arrangeFullMarks);
+  // 新增：用累積滿分次數來算 ARRANGE_PRO
+  update("ARRANGE_PRO", s.arrangePerfectRuns);
+  update("ACCURACY_GOD", s.snakeCorrectTotal);
 
   const totalCleared = units.reduce(
     (acc, u) => acc + u.challenge.clearedLevels,
@@ -263,8 +287,9 @@ function evaluateBadges(p: Progress): Progress {
   );
   update("LEVEL_CRUSHER", totalCleared);
 
-  const fullStarUnits = units.filter((u) => u.stars === 3).length;
-  update("UNIT_MASTER", fullStarUnits);
+  // ❌ 不要再用滿星單元數覆蓋 UNIT_MASTER
+  // const fullStarUnits = units.filter((u) => u.stars === 3).length;
+  // update("UNIT_MASTER", fullStarUnits);
 
   // 3) Encouragement
   update("PERSISTENT", s.totalErrors);
@@ -283,12 +308,20 @@ function evaluateBadges(p: Progress): Progress {
 
 // === Reducer ===
 
+type ReportPayload = Partial<UserStats> & {
+  /** 這次的回報是「遊戲」行為 */
+  isGame?: boolean;
+  /** 這次的回報是「學習」行為 */
+  isLearn?: boolean;
+};
+
 type Action =
   | { type: "ADD_XP"; unit: UnitId; amount: number }
   | { type: "PATCH_UNIT"; unit: UnitId; patch: Partial<UnitProgress> }
-  | { type: "REPORT_ACTIVITY"; payload: Partial<UserStats> }
+  | { type: "REPORT_ACTIVITY"; payload: ReportPayload }
   | { type: "RESET" }
   | { type: "LOAD"; progress: Progress };
+
 
 function reducer(state: Progress, action: Action): Progress {
   switch (action.type) {
@@ -320,16 +353,36 @@ function reducer(state: Progress, action: Action): Progress {
       byUnit[action.unit] = nextUnit;
       return evaluateBadges({ ...state, byUnit });
     }
+
     case "REPORT_ACTIVITY": {
-      const newStats: UserStats = { ...state.stats };
-      Object.entries(action.payload).forEach(([k, v]) => {
-        const key = k as keyof UserStats;
+      const stats: UserStats = { ...state.stats };
+      const { isGame, isLearn, ...rest } = action.payload;
+
+      // 1. 一般數值累加（UserStats 裡對應的欄位都會 +）
+      Object.entries(rest).forEach(([k, v]) => {
         if (typeof v === "number") {
-          newStats[key] = (newStats[key] ?? 0) + v;
+          const key = k as keyof UserStats;
+          stats[key] = (stats[key] ?? 0) + v;
         }
       });
-      return evaluateBadges({ ...state, stats: newStats });
+
+      // 2. Streak 邏輯（GAME_LOVER 用）
+      if (isGame) {
+        stats.currentGameStreak = (stats.currentGameStreak ?? 0) + 1;
+        stats.maxGameStreak = Math.max(
+          stats.maxGameStreak ?? 0,
+          stats.currentGameStreak
+        );
+      }
+
+      if (isLearn) {
+        // 一旦去做學習活動，就視為中斷遊戲連續
+        stats.currentGameStreak = 0;
+      }
+
+      return evaluateBadges({ ...state, stats });
     }
+
     case "RESET":
       return defaultProgress();
     case "LOAD":
@@ -389,33 +442,40 @@ export function useProgress() {
   );
 
   const reportActivity = useCallback(
-    (stats: Partial<UserStats>) =>
-      dispatch({ type: "REPORT_ACTIVITY", payload: stats }),
+    (payload: ReportPayload) =>
+      dispatch({ type: "REPORT_ACTIVITY", payload }),
     []
   );
 
-  // 舊介面 adapter：給 Grammar Tetris 用
+  // 給 Grammar Tetris 用
   const reportGrammarTetris = useCallback(
     (payload: { roundsPlayed: number; reason: "completed" | "no-fit" | "wrong-limit" }) => {
       reportActivity({
+        isGame: true,  // ✅ 這是一場遊戲
         gamesPlayed: 1,
         failedChallenges: payload.reason === "wrong-limit" ? 1 : 0,
+        // 你也可以加上互動量的概念（之後要做 TOTAL_STEPS 時很好用）
+        // interactionCount: payload.roundsPlayed * 5,
       });
     },
     [reportActivity]
   );
 
-  // 舊介面 adapter：給 Snake 用（如有需要）
+  // 給 Snake 用
   const reportSnake = useCallback(
     (payload: { correct: number; total: number; wrong: number; usedTime?: number }) => {
       reportActivity({
+        isGame: true,  // ✅ 這是一場遊戲
         gamesPlayed: 1,
         totalErrors: payload.wrong,
         totalTimeSec: payload.usedTime ?? 0,
+        snakeCorrectTotal: payload.correct, // ✅ 對 ACCURACY_GOD / SNAKE_EATER 用
+        // interactionCount: payload.correct + payload.wrong,
       });
     },
     [reportActivity]
   );
+
 
   const reset = useCallback(() => {
     dispatch({ type: "RESET" });

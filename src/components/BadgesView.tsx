@@ -7,19 +7,19 @@ const BADGE_META: Record<string, { name: string; desc: string }> = {
   // 參與類 Participation
   LOGIN_STREAK:   { name: "持之以恆", desc: "累積登入學習的天數" },
   TIME_KEEPER:    { name: "時間管理者", desc: "累積學習時數" },
-  STORY_FAN:      { name: "故事迷", desc: "閱讀課文故事" },
+  STORY_FAN:      { name: "故事迷", desc: "完整讀完課文故事很多次" },
   GAME_LOVER:     { name: "遊戲狂熱", desc: "遊玩小遊戲" },
   VOCAB_DRILLER:  { name: "單字達人", desc: "完成單字練習" },
   GRAMMAR_NERD:   { name: "文法專家", desc: "完成文法練習" },
   XP_COLLECTOR:   { name: "經驗收藏家", desc: "累積 XP 點數" },
   UNIT_EXPLORER:  { name: "探險家", desc: "解鎖不同單元" },
   CLICK_MASTER:   { name: "行動派", desc: "熱衷各種點擊互動" },
-  REVIEWER:       { name: "溫故知新", desc: "重複練習與複習" },
+  REVIEWER:       { name: "溫故知新", desc: "願意多次重複練習" },
 
   // 技巧類 Skill
   SNAKE_MASTER:   { name: "貪吃蛇王", desc: "貪吃蛇高分高手" },
   TETRIS_ARCH:    { name: "方塊建築師", desc: "文法方塊高手" },
-  QUIZ_SNIPER:    { name: "神射手", desc: "多次拿到滿分" },
+  QUIZ_SNIPER:    { name: "學院派", desc: "多次拿到滿分" },
   SPEED_DEMON:    { name: "極速傳說", desc: "以極快速度完成挑戰" },
   CHALLENGE_KING: { name: "挑戰王者", desc: "挑戰模式滿分關卡" },
   STAR_CATCHER:   { name: "摘星者", desc: "收集大量星星" },
