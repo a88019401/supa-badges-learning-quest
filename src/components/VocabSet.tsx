@@ -28,9 +28,12 @@ export default function VocabSet({ title = "單字集", words, onStudied, onPlay
     setRevealed((prev) => ({ ...prev, [idx]: !prev[idx] }));
 
   const speak = (text: string) => {
+    // ✅ 這裡保留了發音計數功能
     onPlayAudio?.();
     setAudioPlayed(true);
+    
     if (!ttsSupported) return;
+    
     const u = new SpeechSynthesisUtterance(text);
     u.lang = "en-US";
     const voices = window.speechSynthesis.getVoices();
@@ -41,12 +44,13 @@ export default function VocabSet({ title = "單字集", words, onStudied, onPlay
   };
 
   const allFlipped = words.every((_, idx) => revealed[idx]);
+  // 只要全部翻過一遍，或者有聽過發音，就可以領獎
   const readyToClaim = allFlipped || audioPlayed;
 
   const markStudied = () => {
     if (hasClaimed || !readyToClaim) return;
     onStudied();
-    launchConfetti();
+    launchConfetti(); // 觸發慶祝特效
     setHasClaimed(true);
   };
 
@@ -74,6 +78,7 @@ export default function VocabSet({ title = "單字集", words, onStudied, onPlay
                   isBack ? "[transform:rotateY(180deg)]" : ""
                 }`}
               >
+                {/* 正面：中文 */}
                 <AppCard
                   className="absolute inset-0 h-full flex flex-col gap-4 [backface-visibility:hidden] bg-gradient-to-br from-white/95 to-violet-50/70"
                   hoverable
@@ -99,6 +104,7 @@ export default function VocabSet({ title = "單字集", words, onStudied, onPlay
                   <p className="text-[11px] text-neutral-500">點擊右上角翻到英文。</p>
                 </AppCard>
 
+                {/* 背面：英文 */}
                 <AppCard
                   className="absolute inset-0 h-full flex flex-col gap-4 [backface-visibility:hidden] [transform:rotateY(180deg)] bg-gradient-to-br from-white/95 to-emerald-50/70"
                   hoverable
