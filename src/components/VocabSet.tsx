@@ -2,7 +2,12 @@ import { useEffect, useRef, useState, useMemo } from "react";
 import type { Word } from "../types";
 import { Card, SectionTitle } from "./ui";
 
-type Props = { title?: string; words: Word[]; onStudied: () => void };
+type Props = {
+  title?: string;
+  words: Word[];
+  onStudied: () => void;
+  onPlayAudio?: () => void;
+};
 
 /* ------------------ 工具 ------------------ */
 function normalizeLetters(s: string) { return s.toLowerCase().replace(/[^a-z]/g, ""); }
@@ -91,7 +96,12 @@ function Fireworks() {
 }
 
 /* ------------------ 主元件 ------------------ */
-export default function VocabSet({ title = "單字集", words, onStudied }: Props) {
+export default function VocabSet({
+  title = "單字集",
+  words,
+  onStudied,
+  onPlayAudio,
+}: Props) {
   console.log("[VocabSet] mount. words:", words);
 
   const [revealed, setRevealed] = useState<Record<number, boolean>>({});
@@ -112,6 +122,9 @@ export default function VocabSet({ title = "單字集", words, onStudied }: Prop
 
   const [srSupported, setSrSupported] = useState(true);
   const [ttsSupported, setTtsSupported] = useState(true);
+
+  // 研究階段暫時隱藏語音辨識的入口，但保留邏輯以便未來復用
+  const showSpeechRecUI = false;
 
   const recRef = useRef<SpeechRecognition | null>(null);
   const curIdxRef = useRef<number | null>(null);
@@ -217,6 +230,7 @@ export default function VocabSet({ title = "單字集", words, onStudied }: Prop
   const stopListen = () => { console.log("[SR] stopListen"); try { recRef.current?.stop(); } catch (e) { console.warn("[SR] stop error:", e); } };
 
   const speak = (text: string) => {
+    onPlayAudio?.();
     if (!("speechSynthesis" in window)) return;
     const u = new SpeechSynthesisUtterance(text);
     u.lang = "en-US";
@@ -236,10 +250,12 @@ export default function VocabSet({ title = "單字集", words, onStudied }: Prop
     <Card>
       <SectionTitle
         title={title}
-        desc="點卡片標題可翻面（中⇄英）。按 🔈 聽發音；按 🎤 跟讀。正確→CORRECT＋煙火；錯誤→震動＋逐字母提示。"
+        desc="點卡片標題可翻面（中⇄英）。按 🔈 聽發音學習正確唸法。"
       />
 
-      {!srSupported && <div className="mb-3 text-sm text-red-600">你的瀏覽器不支援語音辨識（Web Speech API）。建議使用最新版 Chrome / Edge。</div>}
+      {showSpeechRecUI && !srSupported && (
+        <div className="mb-3 text-sm text-red-600">你的瀏覽器不支援語音辨識（Web Speech API）。建議使用最新版 Chrome / Edge。</div>
+      )}
       {!ttsSupported && <div className="mb-3 text-sm text-amber-700">你的瀏覽器不支援語音合成（speechSynthesis）。將隱藏發音功能。</div>}
 
       {/* 放大卡片：手機 1 欄、平板 2 欄、桌機 3 欄；間距更寬 */}
@@ -290,51 +306,70 @@ export default function VocabSet({ title = "單字集", words, onStudied }: Prop
                         aria-label="play audio" title="播放發音"
                       >🔈 發音</button>
                     )}
-                    {srSupported && (
+                    {showSpeechRecUI && srSupported && (
                       <button
+                        hidden
                         onClick={() => (isListening ? stopListen() : startListen(idx))}
                         className={`px-3 py-1.5 rounded-lg text-sm border w-[96px] flex-none ${
                           isListening ? "bg-red-50 border-red-300" : "bg-white border-neutral-300 hover:bg-neutral-100"
                         }`}
                         aria-label="speech recognition" title="讀出英文"
-                      >{isListening ? "🛑 停止" : "🎤 跟讀"}</button>
+                      >
+                        {isListening ? "🛑 停止" : "🎤 跟讀"}
+                      </button>
                     )}
                   </div>
 
                   {/* 第二行：你說（長句自動換行、必要時捲動） */}
-                  <div
-                    className="text-xs text-neutral-700 break-words whitespace-normal max-h-16 overflow-y-auto pr-1"
-                    title={said || ""}
-                    aria-live="polite"
-                  >
-                    {said ? `你說：${said}` : "（尚未錄音）"}
-                  </div>
+                  {showSpeechRecUI && (
+                    <div
+                      className="text-xs text-neutral-700 break-words whitespace-normal max-h-16 overflow-y-auto pr-1"
+                      title={said || ""}
+                      aria-live="polite"
+                    >
+                      {said ? `你說：${said}` : "（尚未錄音）"}
+                    </div>
+                  )}
                 </div>
               )}
 
-              {/* 逐字母提示：放大字距、限定高度避免溢出（必要時出現捲動） */}
-              {!ok && isBack && pack && (
+              {/* 逐字母提示：暫不顯示（依賴語音辨識） */}
+              {showSpeechRecUI && !ok && isBack && pack && (
                 <div className="mt-2 text-[13px] font-mono leading-6 max-h-28 overflow-y-auto pr-1">
                   <div className="flex flex-wrap items-center gap-1">
                     <span className="text-neutral-500 mr-1">提示:</span>
                     {pack.targetHints.map((h, i2) => (
-                      <span key={i2} className={[
-                        "px-1 rounded border",
-                        h.ok ? "text-green-700 bg-green-50 border-green-300"
-                             : "text-red-700 bg-red-50 border-red-300",
-                      ].join(" ")}>{h.ch}</span>
+                      <span
+                        key={i2}
+                        className={[
+                          "px-1 rounded border",
+                          h.ok
+                            ? "text-green-700 bg-green-50 border-green-300"
+                            : "text-red-700 bg-red-50 border-red-300",
+                        ].join(" ")}
+                      >
+                        {h.ch}
+                      </span>
                     ))}
                     <span className="ml-2 text-neutral-500">（第 {failedTimes} 次）</span>
                   </div>
                   <div className="mt-1 flex flex-wrap items-center gap-1">
                     <span className="text-neutral-500 mr-1">你說:</span>
                     {pack.saidHints.map((h, i3) => (
-                      <span key={i3} className={[
-                        "px-1 rounded border",
-                        h.extra ? "text-neutral-600 bg-neutral-50 border-neutral-300"
-                          : h.ok ? "text-green-700 bg-green-50 border-green-300"
-                          : "text-red-700 bg-red-50 border-red-300",
-                      ].join(" ")} title={h.extra ? "多唸的字母" : h.ok ? "匹配" : "不匹配"}>{h.ch}</span>
+                      <span
+                        key={i3}
+                        className={[
+                          "px-1 rounded border",
+                          h.extra
+                            ? "text-neutral-600 bg-neutral-50 border-neutral-300"
+                            : h.ok
+                            ? "text-green-700 bg-green-50 border-green-300"
+                            : "text-red-700 bg-red-50 border-red-300",
+                        ].join(" ")}
+                        title={h.extra ? "多唸的字母" : h.ok ? "匹配" : "不匹配"}
+                      >
+                        {h.ch}
+                      </span>
                     ))}
                   </div>
                 </div>

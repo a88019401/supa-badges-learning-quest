@@ -78,6 +78,9 @@ export type UserStats = {
 
   /** 貪吃蛇中吃到正確單字的累積總數（ACCURACY_GOD 用） */
   snakeCorrectTotal: number;
+
+  /** 點擊單字發音的次數 */
+  totalPronunciations: number;
 };
 
 
@@ -101,6 +104,7 @@ STORY_FAN: { type: "participation", thresholds: [1, 5, 10] }, // 完整閱讀故
   UNIT_EXPLORER: { type: "participation", thresholds: [1, 3, 6] },          // 解鎖單元數
   CLICK_MASTER: { type: "participation", thresholds: [50, 200, 1000] },    // 互動總數（以 gamesPlayed + hints 等近似）
   REVIEWER: { type: "participation", thresholds: [2, 10, 20] },        // 複習（重複遊玩）
+  AUDIO_LEARNER: { type: "participation", thresholds: [10, 50, 100] },    // 累積點擊發音
 
   // 技巧類 Skill —— 給高成就 / 實力導向的學生
   SNAKE_MASTER: { type: "skill", thresholds: [10, 30, 60] },               // 貪吃蛇最高分
@@ -174,6 +178,7 @@ const defaultProgress = (): Progress => ({
     maxGameStreak: 0,
     arrangePerfectRuns: 0,
     snakeCorrectTotal: 0,
+    totalPronunciations: 0,
   },
   totalXP: 0,
   lastBadgeEvents: [],
@@ -236,6 +241,8 @@ export function getBadgeValue(key: string, p: Progress): number {
       return s.gamesPlayed + s.storiesRead + s.totalHints;
     case "REVIEWER":
       return s.gamesPlayed;
+    case "AUDIO_LEARNER":
+      return s.totalPronunciations;
 
     // Skill
     case "SNAKE_MASTER": {
