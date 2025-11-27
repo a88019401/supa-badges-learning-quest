@@ -15,6 +15,7 @@ export const BADGE_META: Record<string, { name: string; desc: string }> = {
   UNIT_EXPLORER: { name: "探險家", desc: "解鎖不同單元" },
   CLICK_MASTER: { name: "行動派", desc: "熱衷各種點擊互動" },
   REVIEWER: { name: "溫故知新", desc: "願意多次重複練習" },
+  AUDIO_LEARNER: { name: "聽力小耳朵", desc: "點擊單字發音練習聽力" },
 
   // 技巧類 Skill
   SNAKE_MASTER: { name: "貪吃蛇王", desc: "貪吃蛇高分高手" },
