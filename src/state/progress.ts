@@ -5,6 +5,20 @@ import { supabase } from "../supabaseClient";
 import { useAuth } from "./AuthContext";
 
 // === 型別定義 ===
+export type BadgeUnlockEvent = {
+  key: string;       // 例如 "STORY_FAN"
+  tier: BadgeTier;   // 1, 2, 3
+  unlockedAt: string;
+};
+
+export type Progress = {
+  byUnit: Record<UnitId, UnitProgress>;
+  badges: Record<string, BadgeProgress>;
+  stats: UserStats;
+  totalXP: number;
+  /** 本次狀態更新中「新解鎖或升級」的獎章事件（給 toast 用） */
+  lastBadgeEvents?: BadgeUnlockEvent[];
+};
 
 export type BadgeTier = 0 | 1 | 2 | 3; // 0: 未解鎖, 1: 銅, 2: 銀, 3: 金
 
@@ -66,12 +80,7 @@ export type UserStats = {
   snakeCorrectTotal: number;
 };
 
-export type Progress = {
-  byUnit: Record<UnitId, UnitProgress>;
-  badges: Record<string, BadgeProgress>;
-  stats: UserStats;
-  totalXP: number;
-};
+
 
 // === 獎章定義 ===
 // thresholds: [銅, 銀, 金]
@@ -167,6 +176,7 @@ const defaultProgress = (): Progress => ({
     snakeCorrectTotal: 0,
   },
   totalXP: 0,
+  lastBadgeEvents: [],
 });
 
 // === 工具函式 ===
@@ -198,113 +208,150 @@ function checkTier(
   return 0;
 }
 
-// 依據目前 Progress 計算所有獎章
-function evaluateBadges(p: Progress): Progress {
-  const nextBadges: Record<string, BadgeProgress> = { ...p.badges };
+// === 給獎章/介面共用：計算每個獎章目前的「數值」 ===
+export function getBadgeValue(key: string, p: Progress): number {
   const s = p.stats;
   const units = Object.values(p.byUnit);
 
-  const update = (key: string, val: number) => {
-    const def = BADGE_QR[key];
-    if (!def) return;
-    const newTier = checkTier(val, def.thresholds, def.reverse);
-    const oldTier = nextBadges[key]?.tier ?? 0;
-    if (newTier > oldTier) {
-      nextBadges[key] = { tier: newTier, unlockedAt: new Date().toISOString() };
+  switch (key) {
+    // Participation
+    case "LOGIN_STREAK":
+      return s.totalLogins;
+    case "TIME_KEEPER":
+      return s.totalTimeSec;
+    case "STORY_FAN":
+      return s.storiesRead;
+    // GAME_LOVER：最大連續遊戲場數
+    case "GAME_LOVER":
+      return s.maxGameStreak;
+    case "VOCAB_DRILLER":
+      return units.reduce((acc, u) => acc + u.vocab.studied, 0);
+    case "GRAMMAR_NERD":
+      return units.reduce((acc, u) => acc + u.grammar.studied, 0);
+    case "XP_COLLECTOR":
+      return p.totalXP;
+    case "UNIT_EXPLORER":
+      return units.filter((u) => u.xp > 0).length;
+    case "CLICK_MASTER":
+      return s.gamesPlayed + s.storiesRead + s.totalHints;
+    case "REVIEWER":
+      return s.gamesPlayed;
+
+    // Skill
+    case "SNAKE_MASTER": {
+      const maxSnake = Math.max(...units.map((u) => u.vocab.quizBest), 0);
+      return maxSnake;
     }
-  };
+    case "TETRIS_ARCH": {
+      const maxTetris = Math.max(
+        ...units.map((u) => u.grammar.reorderBest),
+        0
+      );
+      return maxTetris;
+    }
+    case "QUIZ_SNIPER":
+      return s.perfectRuns;
+    case "SPEED_DEMON": {
+      const allTimes = units
+        .map((u) => u.challenge.bestTimeSec)
+        .filter((t) => t > 0);
+      const fastest = allTimes.length > 0 ? Math.min(...allTimes) : 0;
+      return fastest;
+    }
+    case "CHALLENGE_KING": {
+      const challengeFullMarks = units.reduce(
+        (acc, u) => acc + (u.challenge.bestScore === 10 ? 1 : 0),
+        0
+      );
+      return challengeFullMarks;
+    }
+    case "STAR_CATCHER": {
+      const challengeStars = units.reduce((acc, u) => {
+        const levelStars = Object.values(u.challenge.levels || {}).reduce(
+          (sum, lv) => sum + (lv.stars ?? 0),
+          0
+        );
+        return acc + levelStars;
+      }, 0);
+      return challengeStars;
+    }
+    case "ARRANGE_PRO":
+      return s.arrangePerfectRuns;
+    case "ACCURACY_GOD":
+      return s.snakeCorrectTotal;
+    case "LEVEL_CRUSHER": {
+      const totalCleared = units.reduce(
+        (acc, u) => acc + u.challenge.clearedLevels,
+        0
+      );
+      return totalCleared;
+    }
+    case "UNIT_MASTER": {
+      // 目前你用「挑戰區星星總數」當指標
+      const challengeStars = units.reduce((acc, u) => {
+        const levelStars = Object.values(u.challenge.levels || {}).reduce(
+          (sum, lv) => sum + (lv.stars ?? 0),
+          0
+        );
+        return acc + levelStars;
+      }, 0);
+      return challengeStars;
+    }
 
-  // 1) Participation
-  update("LOGIN_STREAK", s.totalLogins);
-  update("TIME_KEEPER", s.totalTimeSec);
-  update("STORY_FAN", s.storiesRead);
-  // GAME_LOVER：改用「最大連續遊玩次數」而不是總場數
-  update("GAME_LOVER", s.maxGameStreak);
-  update(
-    "VOCAB_DRILLER",
-    units.reduce((acc, u) => acc + u.vocab.studied, 0)
-  );
-  update(
-    "GRAMMAR_NERD",
-    units.reduce((acc, u) => acc + u.grammar.studied, 0)
-  );
-  update("XP_COLLECTOR", p.totalXP);
-  update(
-    "UNIT_EXPLORER",
-    units.filter((u) => u.xp > 0).length
-  );
-  update("CLICK_MASTER", s.gamesPlayed + s.storiesRead + s.totalHints);
-  update("REVIEWER", s.gamesPlayed);
+    // Encouragement
+    case "PERSISTENT":
+      return s.totalErrors;
+    case "CURIOUS_MIND":
+      return s.totalHints;
+    case "NEVER_GIVE_UP":
+      return s.totalRetries;
+    case "MARATHONER":
+      return s.longSessions;
+    case "TRY_HARD":
+      return s.gamesPlayed + s.totalRetries;
+    case "SLOW_STEADY":
+      return s.longSessions;
+    case "COMEBACK_KID":
+      return s.comebackRuns;
+    case "PRACTICE_MAKE":
+      return s.gamesPlayed;
+    case "BRAVE_HEART":
+      return s.failedChallenges;
+    case "SURVIVOR":
+      return s.closeCalls;
 
-  // 2) Skill
-  const maxSnake = Math.max(...units.map((u) => u.vocab.quizBest), 0);
-  const maxTetris = Math.max(...units.map((u) => u.grammar.reorderBest), 0);
-
-  update("SNAKE_MASTER", maxSnake);
-  update("TETRIS_ARCH", maxTetris);
-  update("QUIZ_SNIPER", s.perfectRuns);
-
-  const allTimes = units
-    .map((u) => u.challenge.bestTimeSec)
-    .filter((t) => t > 0);
-  const fastestTime = allTimes.length > 0 ? Math.min(...allTimes) : 0;
-  update("SPEED_DEMON", fastestTime);
-
-  const challengeFullMarks = units.reduce(
-    (acc, u) => acc + (u.challenge.bestScore === 10 ? 1 : 0),
-    0
-  );
-  update("CHALLENGE_KING", challengeFullMarks);
-
-  //刪除單元星星總數獎章
-  //const totalStars = units.reduce((acc, u) => acc + u.stars, 0);
-  //update("STAR_CATCHER", totalStars);
-  // ⭐ 這裡改成挑戰區星星
-  const challengeStars = units.reduce((acc, u) => {
-    const levelStars = Object.values(u.challenge.levels || {}).reduce(
-      (sum, lv) => sum + (lv.stars ?? 0),
-      0
-    );
-    return acc + levelStars;
-  }, 0);
-
-  update("STAR_CATCHER", challengeStars);
-  update("UNIT_MASTER", challengeStars);
-
-
-  // const arrangeFullMarks = units.reduce(
-  //   (acc, u) => acc + (u.text.arrangeBest >= 10 ? 1 : 0),
-  //   0
-  // );
-  // update("ARRANGE_PRO", arrangeFullMarks);
-  // 新增：用累積滿分次數來算 ARRANGE_PRO
-  update("ARRANGE_PRO", s.arrangePerfectRuns);
-  update("ACCURACY_GOD", s.snakeCorrectTotal);
-
-  const totalCleared = units.reduce(
-    (acc, u) => acc + u.challenge.clearedLevels,
-    0
-  );
-  update("LEVEL_CRUSHER", totalCleared);
-
-  // ❌ 不要再用滿星單元數覆蓋 UNIT_MASTER
-  // const fullStarUnits = units.filter((u) => u.stars === 3).length;
-  // update("UNIT_MASTER", fullStarUnits);
-
-  // 3) Encouragement
-  update("PERSISTENT", s.totalErrors);
-  update("CURIOUS_MIND", s.totalHints);
-  update("NEVER_GIVE_UP", s.totalRetries);
-  update("MARATHONER", s.longSessions);
-  update("TRY_HARD", s.gamesPlayed + s.totalRetries);
-  update("SLOW_STEADY", s.longSessions);
-  update("COMEBACK_KID", s.comebackRuns);
-  update("PRACTICE_MAKE", s.gamesPlayed);
-  update("BRAVE_HEART", s.failedChallenges);
-  update("SURVIVOR", s.closeCalls);
-
-  return { ...p, badges: nextBadges };
+    default:
+      return 0;
+  }
 }
+
+
+// 依據目前 Progress 計算所有獎章
+function evaluateBadges(p: Progress): Progress {
+  const nextBadges: Record<string, BadgeProgress> = { ...p.badges };
+  const unlockedEvents: BadgeUnlockEvent[] = [];
+
+  for (const key of Object.keys(BADGE_QR)) {
+    const def = BADGE_QR[key];
+    const currentVal = getBadgeValue(key, p);
+    const newTier = checkTier(currentVal, def.thresholds, def.reverse);
+    const oldTier = nextBadges[key]?.tier ?? 0;
+
+    if (newTier > oldTier) {
+      const ts = new Date().toISOString();
+      nextBadges[key] = { tier: newTier, unlockedAt: ts };
+      unlockedEvents.push({ key, tier: newTier, unlockedAt: ts });
+    }
+  }
+
+  return {
+    ...p,
+    badges: nextBadges,
+    // 這次狀態更新中，新解鎖 / 升級的獎章清單（給 UI 當 toast 觸發）
+    lastBadgeEvents: unlockedEvents,
+  };
+}
+
 
 // === Reducer ===
 
@@ -527,13 +574,16 @@ async function restore(userId: string): Promise<Progress> {
 
 async function persist(p: Progress, userId: string) {
   try {
-    await supabase
-      .from("profiles")
+    const { error } = await supabase
+    .from("profiles")
       .update({
         progress: p,
         updated_at: new Date().toISOString(),
       })
       .eq("id", userId);
+    if (error){
+        console.error("[progress.persist] error:", error);
+      }
   } catch (e) {
     console.error("[progress.persist] exception:", e);
   }

@@ -1,3 +1,4 @@
+/*index.css*/
 /* 先放所有 @import，在最上方 */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;700&display=swap');
 @import "tailwindcss";
@@ -105,3 +106,26 @@ body{
   80%     { transform: translateX(2px); }
 }
 .shake-once { animation: jiggle .32s ease-in-out 1; }
+
+@keyframes badge-toast {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  10% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  80% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.badge-toast {
+  animation: badge-toast 3.5s ease-in-out forwards;
+}

@@ -4,7 +4,7 @@ import { UNITS } from "./data/units";
 import type { UnitConfig, UnitId, MCQ } from "./types";
 import { useProgress } from "./state/progress";
 import { makeVocabMCQ } from "./lib/questionGen";
-
+import type { BadgeTier } from "./state/progress";
 import { TabButton, Card, SectionTitle } from "./components/ui";
 import VocabSet from "./components/VocabSet";
 import VocabQuiz from "./components/VocabQuiz";
@@ -12,7 +12,11 @@ import GrammarExplain from "./components/GrammarExplain";
 import ReorderSentenceGame from "./components/ReorderSentenceGame";
 import StoryViewer from "./components/StoryViewer";
 import ArrangeSentencesGame from "./components/ArrangeSentencesGame";
-import BadgesView from "./components/BadgesView";
+import BadgesView, {
+  BADGE_META,
+  TIER_NAMES,
+  TIER_ICONS,
+} from "./components/BadgesView";
 // 挑戰
 import ChallengeRun from "./components/ChallengeRun";
 import type { RunReport } from "./components/ChallengeRun";
@@ -555,6 +559,41 @@ function LearningQuestApp() {
     reset,
   } = useProgress();
 
+  // 🔔 獎章解鎖提示 queue
+  const [badgeToasts, setBadgeToasts] = useState<
+    { id: string; key: string; tier: BadgeTier; unlockedAt: string }[]
+  >([]);
+
+  // 當 progress.lastBadgeEvents 有新東西，就塞進 toast queue
+  useEffect(() => {
+    const events = progress.lastBadgeEvents ?? [];
+    if (!events.length) return;
+
+    setBadgeToasts((prev) => [
+      ...prev,
+      ...events.map((ev, idx) => ({
+        id: `${ev.key}-${ev.tier}-${ev.unlockedAt}-${idx}`,
+        key: ev.key,
+        tier: ev.tier,
+        unlockedAt: ev.unlockedAt,
+      })),
+    ]);
+  }, [progress.lastBadgeEvents]);
+
+  // 自動在 3.5 秒後移除 toast（會慢慢淡出）
+  useEffect(() => {
+    if (!badgeToasts.length) return;
+
+    const timers = badgeToasts.map((toast) =>
+      setTimeout(() => {
+        setBadgeToasts((prev) => prev.filter((t) => t.id !== toast.id));
+      }, 3500)
+    );
+
+    return () => {
+      timers.forEach(clearTimeout);
+    };
+  }, [badgeToasts]);
 
   const uProg = progress.byUnit[unitId];
   // ✅ 監聽 grammar-tetris-report 事件，交給 progress 判斷是否要頒發 SUPER_GRAMMAR_EXPERT
@@ -1068,7 +1107,7 @@ function LearningQuestApp() {
                 (textView === "story" ? (
                   <StoryViewer
                     story={unit.story}
-                      readCount={uProg.text.read}
+                    readCount={uProg.text.read}
 
                     onRead={() => {
                       addXP(unitId, 5);
@@ -1082,32 +1121,36 @@ function LearningQuestApp() {
                         storiesRead: 1,
                       });
                     }}
+                    onHint={()=>{
+                      // 所有提示一律經過同一個useProgress
+                      reportActivity({totalHints: 1});
+                    }}
                   />
 
                 ) : (
-<ArrangeSentencesGame
-  sentences={unit.story.sentencesForArrange}
-  onFinished={(correct) => {
-    const total = unit.story.sentencesForArrange.length;
-    const isPerfectArrange = correct === total;
+                  <ArrangeSentencesGame
+                    sentences={unit.story.sentencesForArrange}
+                    onFinished={(correct) => {
+                      const total = unit.story.sentencesForArrange.length;
+                      const isPerfectArrange = correct === total;
 
-    addXP(unitId, correct);
-    patchUnit(unitId, {
-      text: {
-        ...uProg.text,
-        arrangeBest: Math.max(uProg.text.arrangeBest, correct),
-      },
-    });
+                      addXP(unitId, correct);
+                      patchUnit(unitId, {
+                        text: {
+                          ...uProg.text,
+                          arrangeBest: Math.max(uProg.text.arrangeBest, correct),
+                        },
+                      });
 
-    reportActivity({
-      isGame: true,
-      gamesPlayed: 1,
-      perfectRuns: isPerfectArrange ? 1 : 0,
-      arrangePerfectRuns: isPerfectArrange ? 1 : 0, // 給 ARRANGE_PRO 用
-      totalErrors: total - correct,
-    });
-  }}
-/>
+                      reportActivity({
+                        isGame: true,
+                        gamesPlayed: 1,
+                        perfectRuns: isPerfectArrange ? 1 : 0,
+                        arrangePerfectRuns: isPerfectArrange ? 1 : 0, // 給 ARRANGE_PRO 用
+                        totalErrors: total - correct,
+                      });
+                    }}
+                  />
 
                 ))}
             </>
@@ -1171,6 +1214,46 @@ function LearningQuestApp() {
           passed={modalData.passed}
           items={modalData.items}
         />
+      )}
+
+      {/* 🔔 獎章解鎖 Toast：右下角半透明提示 */}
+      {badgeToasts.length > 0 && (
+        <div className="fixed bottom-4 right-4 z-[80] space-y-2 pointer-events-none">
+          {badgeToasts.map((toast) => {
+            const meta = BADGE_META[toast.key] ?? {
+              name: toast.key,
+              desc: "",
+            };
+            const tier = toast.tier as BadgeTier;
+            const tierName = TIER_NAMES[tier];
+            const icon = TIER_ICONS[tier];
+
+
+            return (
+              <div
+                key={toast.id}
+                className="badge-toast max-w-xs pointer-events-none rounded-2xl bg-neutral-900/85 text-white shadow-lg border border-white/10 backdrop-blur-md px-4 py-3 text-sm"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="text-2xl">{icon}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[10px] uppercase tracking-wide text-neutral-300">
+                      Badge Unlocked!
+                    </div>
+                    <div className="font-semibold truncate">
+                      {meta.name} · {tierName}
+                    </div>
+                    {meta.desc && (
+                      <div className="mt-0.5 text-[11px] text-neutral-300 line-clamp-2">
+                        {meta.desc}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
     </div>
   );
