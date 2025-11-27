@@ -1,24 +1,92 @@
 import React from "react";
+import { Button, Card as HeroCard } from "@heroui/react";
 
+export type AppButtonVariant = "solid" | "flat" | "light";
+export type AppButtonColor = "primary" | "success" | "danger";
 
-export const TabButton: React.FC<{ active: boolean; onClick: () => void; children: React.ReactNode }>
-= ({ active, onClick, children }) => (
-<button onClick={onClick} className={`px-4 py-2 rounded-2xl text-sm font-medium border transition ${active ? "bg-neutral-900 text-white border-neutral-900" : "bg-white border-neutral-300 hover:bg-neutral-100"}`}>
-{children}
-</button>
+export type AppButtonProps = React.ComponentProps<typeof Button> & {
+  variant?: AppButtonVariant;
+  color?: AppButtonColor;
+  size?: "sm" | "md" | "lg";
+};
+
+const colorMap: Record<AppButtonColor, "primary" | "success" | "danger"> = {
+  primary: "primary",
+  success: "success",
+  danger: "danger",
+};
+
+export const AppButton: React.FC<AppButtonProps> = ({
+  variant = "solid",
+  color = "primary",
+  size = "md",
+  className = "",
+  children,
+  ...rest
+}) => (
+  <Button
+    variant={variant}
+    color={colorMap[color as AppButtonColor]}
+    size={size}
+    className={[
+      "transition duration-200 ease-out hover:-translate-y-0.5 active:scale-95",
+      "shadow-sm",
+      className,
+    ].join(" ")}
+    {...rest}
+  >
+    {children}
+  </Button>
 );
 
+export type AppCardProps = React.ComponentProps<typeof HeroCard> & { hoverable?: boolean };
 
-export const Card: React.FC<{ children: React.ReactNode; className?: string }>
-= ({ children, className }) => (
-<div className={`rounded-2xl border border-neutral-200 bg-white shadow-sm p-4 ${className ?? ""}`}>{children}</div>
+export const AppCard: React.FC<AppCardProps> = ({ children, className = "", hoverable, ...rest }) => (
+  <HeroCard
+    className={[
+      "rounded-2xl border border-white/60 bg-white/80 shadow-md backdrop-blur-sm p-4",
+      hoverable ? "hover:-translate-y-1 hover:shadow-lg transition" : "",
+      className,
+    ].join(" ")}
+    {...rest}
+  >
+    {children}
+  </HeroCard>
 );
 
+export type TabButtonProps = {
+  active?: boolean;
+  children: React.ReactNode;
+  onClick?: () => void;
+};
 
-export const SectionTitle: React.FC<{ title: string; desc?: string }>
-= ({ title, desc }) => (
-<div className="mb-3">
-<h2 className="text-lg font-semibold text-neutral-900">{title}</h2>
-{desc && <p className="text-sm text-neutral-500">{desc}</p>}
-</div>
+export const TabButton: React.FC<TabButtonProps> = ({ active, children, onClick }) => (
+  <AppButton
+    size="sm"
+    variant={active ? "solid" : "flat"}
+    color="primary"
+    className={`min-w-[96px] ${active ? "shadow" : "shadow-none"}`}
+    onClick={onClick}
+  >
+    {children}
+  </AppButton>
 );
+
+export type SectionTitleProps = {
+  title: string;
+  desc?: string;
+  className?: string;
+};
+
+export const SectionTitle: React.FC<SectionTitleProps> = ({ title, desc, className = "" }) => (
+  <div className={`mb-4 flex flex-col gap-1 ${className}`}>
+    <div className="flex items-center gap-2 text-lg font-semibold text-neutral-900">
+      <span className="inline-block h-2.5 w-2.5 rounded-full bg-violet-500 shadow-inner" />
+      <span>{title}</span>
+    </div>
+    {desc && <p className="text-sm text-neutral-500 leading-relaxed">{desc}</p>}
+  </div>
+);
+
+// Backwards compatibility exports
+export { AppCard as Card };

@@ -965,6 +965,9 @@ function LearningQuestApp() {
                   <VocabSet
                     title={`${unit.title} 單字集`}
                     words={unit.words}
+                    onPlayAudio={() => {
+                      reportActivity({ totalPronunciations: 1 });
+                    }}
                     onStudied={() => {
                       addXP(unitId, 5);
                       patchUnit(unitId, {

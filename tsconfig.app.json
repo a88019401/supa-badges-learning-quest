@@ -15,6 +15,10 @@
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
+    "paths": {
+      "@heroui/react": ["./src/vendor/heroui-react"],
+      "canvas-confetti": ["./src/vendor/canvas-confetti"],
+    },
 
     /* Linting */
     "strict": true,
