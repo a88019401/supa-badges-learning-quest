@@ -2,7 +2,6 @@
 import { useState } from "react"; 
 import type { Story, StoryParagraph } from "../types";
 import { Card, SectionTitle } from "./ui";
-import { useProgress } from "../state/progress";
 
 // 30 秒冷卻時間（毫秒）
 const READ_COOLDOWN_MS = 30_000;
