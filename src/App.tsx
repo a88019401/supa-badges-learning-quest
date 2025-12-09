@@ -1,5 +1,5 @@
 // src/App.tsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { UNITS } from "./data/units";
 import type { UnitConfig, UnitId, MCQ } from "./types";
 import { useProgress } from "./state/progress";
@@ -138,10 +138,11 @@ function LevelGrid({
               key={lv}
               disabled={!unlocked}
               onClick={() => onPick(lv)}
-              className={`p-3 rounded-xl border text-left ${unlocked
-                ? "bg-white hover:bg-neutral-50"
-                : "bg-neutral-100 text-neutral-400 cursor-not-allowed"
-                }`}
+              className={`p-3 rounded-xl border text-left ${
+                unlocked
+                  ? "bg-white hover:bg-neutral-50"
+                  : "bg-neutral-100 text-neutral-400 cursor-not-allowed"
+              }`}
             >
               <div className="text-xs opacity-70">LEVEL {lv}</div>
               <div className="text-sm">
@@ -235,10 +236,12 @@ function ResultModal({
                   const picked =
                     it.pickedIndex === null
                       ? "（未作答）"
-                      : `${letter(it.pickedIndex)}. ${it.choices[it.pickedIndex]
-                      }`;
-                  const correct = `${letter(it.correctIndex)}. ${it.choices[it.correctIndex]
-                    }`;
+                      : `${letter(it.pickedIndex)}. ${
+                          it.choices[it.pickedIndex]
+                        }`;
+                  const correct = `${letter(it.correctIndex)}. ${
+                    it.choices[it.correctIndex]
+                  }`;
                   return (
                     <div
                       key={it.id ?? `i-${i}`}
@@ -249,8 +252,9 @@ function ResultModal({
                           {i + 1}. {it.prompt}
                         </div>
                         <div
-                          className={`text-sm ${it.correct ? "text-green-600" : "text-red-600"
-                            }`}
+                          className={`text-sm ${
+                            it.correct ? "text-green-600" : "text-red-600"
+                          }`}
                         >
                           {it.correct ? "✔️ 正確" : "❌ 錯誤"}
                         </div>
@@ -341,9 +345,7 @@ function AuthGate() {
     } catch (err: any) {
       // 常見：Invalid login credentials / Email not confirmed 等
       const msg =
-        err?.message ||
-        err?.error_description ||
-        "發生未知錯誤，請稍後再試。";
+        err?.message || err?.error_description || "發生未知錯誤，請稍後再試。";
       setError(msg);
     } finally {
       setLoading(false);
@@ -365,9 +367,7 @@ function AuthGate() {
       setMessage("已寄出重設密碼信件，請至信箱查看。");
     } catch (err: any) {
       const msg =
-        err?.message ||
-        err?.error_description ||
-        "寄送失敗，請稍後再試。";
+        err?.message || err?.error_description || "寄送失敗，請稍後再試。";
       setError(msg);
     } finally {
       setLoading(false);
@@ -431,7 +431,9 @@ function AuthGate() {
               <input
                 id="password"
                 type={showPassword ? "text" : "password"}
-                autoComplete={mode === "signin" ? "current-password" : "new-password"}
+                autoComplete={
+                  mode === "signin" ? "current-password" : "new-password"
+                }
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -477,11 +479,7 @@ function AuthGate() {
             disabled={loading}
             className="w-full px-4 py-2 text-white bg-neutral-900 rounded-xl disabled:opacity-50"
           >
-            {loading
-              ? "處理中..."
-              : mode === "signin"
-                ? "登入"
-                : "建立帳號"}
+            {loading ? "處理中..." : mode === "signin" ? "登入" : "建立帳號"}
           </button>
         </form>
 
@@ -522,12 +520,16 @@ export default function App() {
       </div>
     );
   }
+  // 沒 session = 一律回登入
   if (!session) {
     return <AuthGate />;
   }
-  if (session && !profile?.full_name) {
+
+  // 有 session 但 profile 還沒填名 = 去補資料
+  if (!profile?.full_name) {
     return <ProfileSetup />;
   }
+
   // 如果已登入，就顯示原本的 LearningQuestApp
   // 為了方便，我把您原本的 App 內容包成一個新元件
   return <LearningQuestApp />;
@@ -565,20 +567,32 @@ function LearningQuestApp() {
   >([]);
 
   // 當 progress.lastBadgeEvents 有新東西，就塞進 toast queue
-  useEffect(() => {
-    const events = progress.lastBadgeEvents ?? [];
-    if (!events.length) return;
+// ✅ 放在 badgeToasts state 旁邊
+const seenBadgeEventIds = useRef<Set<string>>(new Set());
 
-    setBadgeToasts((prev) => [
-      ...prev,
-      ...events.map((ev, idx) => ({
-        id: `${ev.key}-${ev.tier}-${ev.unlockedAt}-${idx}`,
-        key: ev.key,
-        tier: ev.tier,
-        unlockedAt: ev.unlockedAt,
-      })),
-    ]);
-  }, [progress.lastBadgeEvents]);
+useEffect(() => {
+  const events = progress.lastBadgeEvents ?? [];
+  if (!events.length) return;
+
+  const fresh = events.filter((ev) => {
+    const id = `${ev.key}-${ev.tier}-${ev.unlockedAt}`;
+    if (seenBadgeEventIds.current.has(id)) return false;
+    seenBadgeEventIds.current.add(id);
+    return true;
+  });
+
+  if (!fresh.length) return;
+
+  setBadgeToasts((prev) => [
+    ...prev,
+    ...fresh.map((ev, idx) => ({
+      id: `${ev.key}-${ev.tier}-${ev.unlockedAt}-${idx}`,
+      key: ev.key,
+      tier: ev.tier,
+      unlockedAt: ev.unlockedAt,
+    })),
+  ]);
+}, [progress.lastBadgeEvents]);
 
   // 自動在 3.5 秒後移除 toast（會慢慢淡出）
   useEffect(() => {
@@ -732,7 +746,10 @@ function LearningQuestApp() {
 
     const nextLevels = { ...(uProg.challenge.levels || {}), [level]: newLv };
     const nextUnlocked = calcUnlockedCount(nextLevels, 10);
-    const nextCleared = Math.max(uProg.challenge.clearedLevels, nextUnlocked - 1);
+    const nextCleared = Math.max(
+      uProg.challenge.clearedLevels,
+      nextUnlocked - 1
+    );
 
     patchUnit(unitId, {
       challenge: {
@@ -758,7 +775,6 @@ function LearningQuestApp() {
     setModalOpen(true);
   }
 
-
   function closeResultModal() {
     setModalOpen(false);
     // 回關卡選單並預選「下一個可玩的關卡」
@@ -770,6 +786,7 @@ function LearningQuestApp() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-neutral-100 to-neutral-50 text-neutral-900">
       {/* Header */}
+      
       <header className="max-w-5xl mx-auto px-4 py-5 flex items-center justify-between">
         <div>
           <div className="text-2xl font-bold tracking-tight">
@@ -802,8 +819,19 @@ function LearningQuestApp() {
             onClick={() => setTab("leaderboard")}
           >
             排行榜
-          </TabButton>
+          </TabButton>    {/* ✅ 新增登出 */}
+    <button
+      onClick={async () => {
+        await supabase.auth.signOut();
+        // 不用手動 redirect，AuthContext 會收到 SIGNED_OUT
+      }}
+      className="px-3 py-2 rounded-xl border text-sm bg-white hover:bg-neutral-50"
+      title="實驗或共用電腦建議一定要登出"
+    >
+      登出
+    </button>
         </div>
+        
       </header>
 
       <main className="max-w-5xl mx-auto px-4 pb-10">
@@ -870,7 +898,8 @@ function LearningQuestApp() {
               >
                 <div className="text-xs opacity-80">Unit {u.id}</div>
                 <div className="font-semibold truncate">*/}
-        {/* {u.title.replace(/^Unit \d+:\s這邊要加上星星*和斜線/與逗點, */}{/*"")} */}
+        {/* {u.title.replace(/^Unit \d+:\s這邊要加上星星*和斜線/與逗點, */}
+        {/*"")} */}
         {/*</div>
               </button>*/}
         {/*))}*/}
@@ -981,7 +1010,6 @@ function LearningQuestApp() {
                       reportActivity({ isLearn: true });
                     }}
                   />
-
                 ) : vocabView === "snake" ? (
                   <SnakeChallenge
                     key={`snake-learn-${unitId}`}
@@ -1016,6 +1044,12 @@ function LearningQuestApp() {
                         };
                       });
                       const isPerfect = r.correct === r.totalQuestions;
+                      // 🔸 這裡自己定義「通關門檻」
+                      const passScore = 7; // 跟上面 targetScore 對齊
+                      const safePassed =
+                        typeof r.passed === "boolean"
+                          ? r.passed
+                          : r.correct >= passScore;
 
                       setModalData({
                         title: r.title || `單字練習：貪吃蛇`,
@@ -1023,7 +1057,8 @@ function LearningQuestApp() {
                         total: r.totalQuestions,
                         stars: computeLevelStars(r.correct),
                         timeUsed: r.usedTime,
-                        passed: r.passed,
+                        //passed: r.passed,
+                        passed: safePassed, 
                         items,
                       });
                       setModalOpen(true);
@@ -1079,7 +1114,6 @@ function LearningQuestApp() {
                       reportActivity({ isLearn: true });
                     }}
                   />
-
                 ) : (
                   <ReorderSentenceGame
                     targets={unit.grammar.flatMap((g) => g.examples ?? [])}
@@ -1111,7 +1145,6 @@ function LearningQuestApp() {
                   <StoryViewer
                     story={unit.story}
                     readCount={uProg.text.read}
-
                     onRead={() => {
                       addXP(unitId, 5);
                       patchUnit(unitId, {
@@ -1124,12 +1157,11 @@ function LearningQuestApp() {
                         storiesRead: 1,
                       });
                     }}
-                    onHint={()=>{
+                    onHint={() => {
                       // 所有提示一律經過同一個useProgress
-                      reportActivity({totalHints: 1});
+                      reportActivity({ totalHints: 1 });
                     }}
                   />
-
                 ) : (
                   <ArrangeSentencesGame
                     sentences={unit.story.sentencesForArrange}
@@ -1141,7 +1173,10 @@ function LearningQuestApp() {
                       patchUnit(unitId, {
                         text: {
                           ...uProg.text,
-                          arrangeBest: Math.max(uProg.text.arrangeBest, correct),
+                          arrangeBest: Math.max(
+                            uProg.text.arrangeBest,
+                            correct
+                          ),
                         },
                       });
 
@@ -1154,7 +1189,6 @@ function LearningQuestApp() {
                       });
                     }}
                   />
-
                 ))}
             </>
           )}
@@ -1180,14 +1214,14 @@ function LearningQuestApp() {
                 fixedSet={
                   unitId === 1
                     ? (
-                      {
-                        1: fixedU1L1,
-                        /*2: fixedU1L2,
+                        {
+                          1: fixedU1L1,
+                          /*2: fixedU1L2,
                         3: fixedU1L3,
                         4: fixedU1L4,
                         5: fixedU1L5,*/
-                      } as const
-                    )[level]
+                        } as const
+                      )[level]
                     : undefined
                 }
                 onFinish={handleChallengeFinish}
@@ -1230,7 +1264,6 @@ function LearningQuestApp() {
             const tier = toast.tier as BadgeTier;
             const tierName = TIER_NAMES[tier];
             const icon = TIER_ICONS[tier];
-
 
             return (
               <div

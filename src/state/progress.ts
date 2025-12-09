@@ -6,8 +6,8 @@ import { useAuth } from "./AuthContext";
 
 // === 型別定義 ===
 export type BadgeUnlockEvent = {
-  key: string;       // 例如 "STORY_FAN"
-  tier: BadgeTier;   // 1, 2, 3
+  key: string; // 例如 "STORY_FAN"
+  tier: BadgeTier; // 1, 2, 3
   unlockedAt: string;
 };
 
@@ -24,8 +24,9 @@ export type BadgeTier = 0 | 1 | 2 | 3; // 0: 未解鎖, 1: 銅, 2: 銀, 3: 金
 
 export type BadgeProgress = {
   tier: BadgeTier;
-  unlockedAt?: string;
+  unlockedAtByTier?: Partial<Record<1|2|3, string>>;
 };
+
 
 export type UnitProgress = {
   stars: number; // 單元整體 0–3 星
@@ -35,8 +36,8 @@ export type UnitProgress = {
   text: { read: number; arrangeBest: number };
   challenge: {
     clearedLevels: number; // 最大通關關卡（相容舊版）
-    bestTimeSec: number;   // 全單元最佳時間
-    bestScore: number;     // 全單元最佳分數
+    bestTimeSec: number; // 全單元最佳時間
+    bestScore: number; // 全單元最佳分數
     levels: Record<
       number,
       {
@@ -51,19 +52,19 @@ export type UnitProgress = {
 
 // 用於獎章評估的統計數據
 export type UserStats = {
-  totalLogins: number;      // 總登入次數
-  totalTimeSec: number;     // 總學習秒數
-  totalErrors: number;      // 累積錯誤次數
-  totalHints: number;       // 使用提示次數
-  totalRetries: number;     // 失敗後重試次數
-  gamesPlayed: number;      // 小遊戲遊玩總數
-  perfectRuns: number;      // 滿分通關次數
-  storiesRead: number;      // 完整閱讀故事次數
+  totalLogins: number; // 總登入次數
+  totalTimeSec: number; // 總學習秒數
+  totalErrors: number; // 累積錯誤次數
+  totalHints: number; // 使用提示次數
+  totalRetries: number; // 失敗後重試次數
+  gamesPlayed: number; // 小遊戲遊玩總數
+  perfectRuns: number; // 滿分通關次數
+  storiesRead: number; // 完整閱讀故事次數
 
   // 進階鼓勵類用
-  longSessions: number;     // 單次長時間學習（例如 >= 20 分鐘）的次數
-  closeCalls: number;       // 險勝（剛好及格）的次數
-  comebackRuns: number;     // 成績大幅進步的次數
+  longSessions: number; // 單次長時間學習（例如 >= 20 分鐘）的次數
+  closeCalls: number; // 險勝（剛好及格）的次數
+  comebackRuns: number; // 成績大幅進步的次數
   failedChallenges: number; // 挑戰失敗次數
   // === 新增的統計欄位 ===
 
@@ -83,53 +84,55 @@ export type UserStats = {
   totalPronunciations: number;
 };
 
-
-
 // === 獎章定義 ===
 // thresholds: [銅, 銀, 金]
 // reverse = true 表示「數值越小越好」（例如時間越短越好）
 
 export const BADGE_QR: Record<
   string,
-  { type: "participation" | "skill" | "encouragement"; thresholds: [number, number, number]; reverse?: boolean }
+  {
+    type: "participation" | "skill" | "encouragement";
+    thresholds: [number, number, number];
+    reverse?: boolean;
+  }
 > = {
   // 參與類 Participation —— 只要願意做就有
-  LOGIN_STREAK: { type: "participation", thresholds: [1, 5, 20] },          // 總登入次數
-  TIME_KEEPER: { type: "participation", thresholds: [180, 480, 900] },  // 累積時間：3 分 / 8 小時 / 15 小時
-STORY_FAN: { type: "participation", thresholds: [1, 5, 10] }, // 完整閱讀故事 1 / 5 / 10 次
-  GAME_LOVER: { type: "participation", thresholds: [3, 6, 10] },        // 遊玩小遊戲次數
-  VOCAB_DRILLER: { type: "participation", thresholds: [3, 10, 30] },        // 單字練習次數
-  GRAMMAR_NERD: { type: "participation", thresholds: [3, 10, 30] },        // 文法練習次數
-  XP_COLLECTOR: { type: "participation", thresholds: [100, 500, 2000] },   // 累積 XP
-  UNIT_EXPLORER: { type: "participation", thresholds: [1, 3, 6] },          // 解鎖單元數
-  CLICK_MASTER: { type: "participation", thresholds: [50, 200, 1000] },    // 互動總數（以 gamesPlayed + hints 等近似）
-  REVIEWER: { type: "participation", thresholds: [2, 10, 20] },        // 複習（重複遊玩）
-  AUDIO_LEARNER: { type: "participation", thresholds: [10, 50, 100] },    // 累積點擊發音
+  LOGIN_STREAK: { type: "participation", thresholds: [1, 5, 20] }, // 累積登入次數
+  TIME_KEEPER: { type: "participation", thresholds: [180, 480, 900] }, // 累積時間：3 分 /  8分 / 15分
+  STORY_FAN: { type: "participation", thresholds: [1, 5, 10] }, // 完整閱讀故事 1 / 5 / 10 次
+  GAME_LOVER: { type: "participation", thresholds: [3, 6, 10] }, // 連續遊戲場數（3 / 6 / 10 場）
+  VOCAB_DRILLER: { type: "participation", thresholds: [3, 10, 30] }, // 單字練習次數
+  GRAMMAR_NERD: { type: "participation", thresholds: [3, 10, 30] }, // 文法練習次數
+  XP_COLLECTOR: { type: "participation", thresholds: [100, 500, 2000] }, // 累積 XP
+  UNIT_EXPLORER: { type: "participation", thresholds: [1, 3, 6] }, // 解鎖單元數
+  CLICK_MASTER: { type: "participation", thresholds: [50, 200, 1000] }, // 互動總數（以 gamesPlayed + hints 等近似）
+  REVIEWER: { type: "participation", thresholds: [2, 10, 20] }, // 複習（重複遊玩）
+  AUDIO_LEARNER: { type: "participation", thresholds: [10, 50, 100] }, // 累積點擊發音
 
   // 技巧類 Skill —— 給高成就 / 實力導向的學生
-  SNAKE_MASTER: { type: "skill", thresholds: [10, 30, 60] },               // 貪吃蛇最高分
-  TETRIS_ARCH: { type: "skill", thresholds: [10, 40, 80] },               // 文法 Tetris 消行數
-  QUIZ_SNIPER: { type: "skill", thresholds: [1, 5, 10] },                 // 單字／關卡滿分次數
+  SNAKE_MASTER: { type: "skill", thresholds: [10, 30, 60] }, // 貪吃蛇最高分
+  TETRIS_ARCH: { type: "skill", thresholds: [10, 40, 80] }, // 文法 Tetris 消行數
+  QUIZ_SNIPER: { type: "skill", thresholds: [1, 5, 10] }, // 單字／關卡滿分次數
   // 秒數越少越好：銅 50s、銀 40s、金 30s
   SPEED_DEMON: { type: "skill", thresholds: [50, 40, 30], reverse: true },
-  CHALLENGE_KING: { type: "skill", thresholds: [1, 5, 10] },                 // 挑戰模式滿分關數
-  STAR_CATCHER: { type: "skill", thresholds: [3, 9, 18] },                 // 總星星數
-  ARRANGE_PRO: { type: "skill", thresholds: [1, 5, 10] },                 // 排列句子滿分次數
-  ACCURACY_GOD: { type: "skill", thresholds: [5, 15, 30] },                // 高準確率通關次數（以 perfectRuns 代理）
-  LEVEL_CRUSHER: { type: "skill", thresholds: [2, 10, 30] },                // 通過關卡總數
-  UNIT_MASTER: { type: "skill", thresholds: [1, 3, 6] },                  // 滿星單元數
+  CHALLENGE_KING: { type: "skill", thresholds: [1, 5, 10] }, // 挑戰模式滿分關數
+  STAR_CATCHER: { type: "skill", thresholds: [3, 9, 18] }, // 總星星數
+  ARRANGE_PRO: { type: "skill", thresholds: [1, 5, 10] }, // 排列句子滿分次數
+  ACCURACY_GOD: { type: "skill", thresholds: [5, 15, 30] }, // 高準確率通關次數（以 perfectRuns 代理）
+  LEVEL_CRUSHER: { type: "skill", thresholds: [2, 10, 30] }, // 通過關卡總數
+  UNIT_MASTER: { type: "skill", thresholds: [1, 3, 6] }, // 滿星單元數
 
   // 鼓勵類 Encouragement —— 獎勵失敗、嘗試與堅持
-  PERSISTENT: { type: "encouragement", thresholds: [5, 20, 50] },        // 累積錯誤
-  CURIOUS_MIND: { type: "encouragement", thresholds: [3, 10, 30] },        // 使用提示
-  NEVER_GIVE_UP: { type: "encouragement", thresholds: [1, 5, 15] },         // 重試次數
-  MARATHONER: { type: "encouragement", thresholds: [1, 3, 10] },         // 長時間學習次數
-  TRY_HARD: { type: "encouragement", thresholds: [10, 50, 100] },      // 總嘗試數（遊戲 + 重試）
-  SLOW_STEADY: { type: "encouragement", thresholds: [1, 5, 10] },         // 穩紮穩打（這裡以 longSessions 近似）
-  COMEBACK_KID: { type: "encouragement", thresholds: [1, 3, 5] },          // 逆轉勝
-  PRACTICE_MAKE: { type: "encouragement", thresholds: [5, 15, 30] },        // 練習次數（遊戲數）
-  BRAVE_HEART: { type: "encouragement", thresholds: [1, 5, 10] },         // 挑戰失敗次數
-  SURVIVOR: { type: "encouragement", thresholds: [1, 3, 5] },          // 低空飛過次數
+  PERSISTENT: { type: "encouragement", thresholds: [5, 20, 50] }, // 累積錯誤
+  CURIOUS_MIND: { type: "encouragement", thresholds: [3, 10, 30] }, // 使用提示
+  NEVER_GIVE_UP: { type: "encouragement", thresholds: [1, 5, 15] }, // 重試次數
+  MARATHONER: { type: "encouragement", thresholds: [1, 3, 10] }, // 長時間學習次數
+  TRY_HARD: { type: "encouragement", thresholds: [10, 50, 100] }, // 總嘗試數（遊戲 + 重試）
+  SLOW_STEADY: { type: "encouragement", thresholds: [1, 5, 10] }, // 穩紮穩打（這裡以 longSessions 近似）
+  COMEBACK_KID: { type: "encouragement", thresholds: [1, 3, 5] }, // 逆轉勝
+  PRACTICE_MAKE: { type: "encouragement", thresholds: [5, 15, 30] }, // 練習次數（遊戲數）
+  BRAVE_HEART: { type: "encouragement", thresholds: [1, 5, 10] }, // 挑戰失敗次數
+  SURVIVOR: { type: "encouragement", thresholds: [1, 3, 5] }, // 低空飛過次數
 };
 
 // === 預設值 ===
@@ -172,7 +175,6 @@ const defaultProgress = (): Progress => ({
     closeCalls: 0,
     comebackRuns: 0,
     failedChallenges: 0,
-
 
     currentGameStreak: 0,
     maxGameStreak: 0,
@@ -250,10 +252,7 @@ export function getBadgeValue(key: string, p: Progress): number {
       return maxSnake;
     }
     case "TETRIS_ARCH": {
-      const maxTetris = Math.max(
-        ...units.map((u) => u.grammar.reorderBest),
-        0
-      );
+      const maxTetris = Math.max(...units.map((u) => u.grammar.reorderBest), 0);
       return maxTetris;
     }
     case "QUIZ_SNIPER":
@@ -294,15 +293,15 @@ export function getBadgeValue(key: string, p: Progress): number {
       return totalCleared;
     }
     case "UNIT_MASTER": {
-      // 目前你用「挑戰區星星總數」當指標
-      const challengeStars = units.reduce((acc, u) => {
-        const levelStars = Object.values(u.challenge.levels || {}).reduce(
-          (sum, lv) => sum + (lv.stars ?? 0),
-          0
-        );
-        return acc + levelStars;
+      // 單元制霸：統計「挑戰區拿到 3★ 的關卡數」
+      const totalThreeStarLevels = units.reduce((acc, u) => {
+        const threeStar = Object.values(u.challenge.levels || {}).filter(
+          (lv) => (lv.stars ?? 0) >= 3
+        ).length;
+        return acc + threeStar;
       }, 0);
-      return challengeStars;
+
+      return totalThreeStarLevels;
     }
 
     // Encouragement
@@ -332,7 +331,6 @@ export function getBadgeValue(key: string, p: Progress): number {
   }
 }
 
-
 // 依據目前 Progress 計算所有獎章
 function evaluateBadges(p: Progress): Progress {
   const nextBadges: Record<string, BadgeProgress> = { ...p.badges };
@@ -342,11 +340,27 @@ function evaluateBadges(p: Progress): Progress {
     const def = BADGE_QR[key];
     const currentVal = getBadgeValue(key, p);
     const newTier = checkTier(currentVal, def.thresholds, def.reverse);
-    const oldTier = nextBadges[key]?.tier ?? 0;
+    const old = nextBadges[key];
+    const oldTier = old?.tier ?? 0;
 
     if (newTier > oldTier) {
       const ts = new Date().toISOString();
-      nextBadges[key] = { tier: newTier, unlockedAt: ts };
+
+      // ✅ 保留每個 tier 的時間
+      const prevByTier = old?.unlockedAtByTier ?? {};
+      const nextByTier =
+        newTier >= 1
+          ? ({
+              ...prevByTier,
+              [newTier]: ts,
+            } as BadgeProgress["unlockedAtByTier"])
+          : prevByTier;
+
+      nextBadges[key] = {
+        tier: newTier,
+        unlockedAtByTier: nextByTier,
+      };
+
       unlockedEvents.push({ key, tier: newTier, unlockedAt: ts });
     }
   }
@@ -354,7 +368,6 @@ function evaluateBadges(p: Progress): Progress {
   return {
     ...p,
     badges: nextBadges,
-    // 這次狀態更新中，新解鎖 / 升級的獎章清單（給 UI 當 toast 觸發）
     lastBadgeEvents: unlockedEvents,
   };
 }
@@ -375,7 +388,6 @@ type Action =
   | { type: "REPORT_ACTIVITY"; payload: ReportPayload }
   | { type: "RESET" }
   | { type: "LOAD"; progress: Progress };
-
 
 function reducer(state: Progress, action: Action): Progress {
   switch (action.type) {
@@ -496,16 +508,18 @@ export function useProgress() {
   );
 
   const reportActivity = useCallback(
-    (payload: ReportPayload) =>
-      dispatch({ type: "REPORT_ACTIVITY", payload }),
+    (payload: ReportPayload) => dispatch({ type: "REPORT_ACTIVITY", payload }),
     []
   );
 
   // 給 Grammar Tetris 用
   const reportGrammarTetris = useCallback(
-    (payload: { roundsPlayed: number; reason: "completed" | "no-fit" | "wrong-limit" }) => {
+    (payload: {
+      roundsPlayed: number;
+      reason: "completed" | "no-fit" | "wrong-limit";
+    }) => {
       reportActivity({
-        isGame: true,  // ✅ 這是一場遊戲
+        isGame: true, // ✅ 這是一場遊戲
         gamesPlayed: 1,
         failedChallenges: payload.reason === "wrong-limit" ? 1 : 0,
         // 你也可以加上互動量的概念（之後要做 TOTAL_STEPS 時很好用）
@@ -517,9 +531,14 @@ export function useProgress() {
 
   // 給 Snake 用
   const reportSnake = useCallback(
-    (payload: { correct: number; total: number; wrong: number; usedTime?: number }) => {
+    (payload: {
+      correct: number;
+      total: number;
+      wrong: number;
+      usedTime?: number;
+    }) => {
       reportActivity({
-        isGame: true,  // ✅ 這是一場遊戲
+        isGame: true, // ✅ 這是一場遊戲
         gamesPlayed: 1,
         totalErrors: payload.wrong,
         totalTimeSec: payload.usedTime ?? 0,
@@ -529,7 +548,6 @@ export function useProgress() {
     },
     [reportActivity]
   );
-
 
   const reset = useCallback(() => {
     dispatch({ type: "RESET" });
@@ -568,6 +586,7 @@ async function restore(userId: string): Promise<Progress> {
       return {
         ...def,
         ...remote,
+        lastBadgeEvents: [],
         byUnit: { ...def.byUnit, ...(remote.byUnit ?? {}) },
         badges: { ...def.badges, ...(remote.badges ?? {}) },
         stats: { ...def.stats, ...(remote.stats ?? {}) },
@@ -581,16 +600,19 @@ async function restore(userId: string): Promise<Progress> {
 
 async function persist(p: Progress, userId: string) {
   try {
+    const { lastBadgeEvents, ...persistable } = p;
+
     const { error } = await supabase
-    .from("profiles")
+      .from("profiles")
       .update({
-        progress: p,
+        progress: persistable,
         updated_at: new Date().toISOString(),
       })
       .eq("id", userId);
-    if (error){
-        console.error("[progress.persist] error:", error);
-      }
+
+    if (error) {
+      console.error("[progress.persist] error:", error);
+    }
   } catch (e) {
     console.error("[progress.persist] exception:", e);
   }

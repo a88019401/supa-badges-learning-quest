@@ -5,10 +5,10 @@ import { BADGE_QR, getBadgeValue } from "../state/progress";
 // 顯示文字（名稱 + 說明）
 export const BADGE_META: Record<string, { name: string; desc: string }> = {
   // 參與類 Participation
-  LOGIN_STREAK: { name: "持之以恆", desc: "累積登入學習的天數" },
+LOGIN_STREAK: { name: "常來報到", desc: "累積登入次數" },
   TIME_KEEPER: { name: "時間管理者", desc: "累積學習時數" },
   STORY_FAN: { name: "故事迷", desc: "完整讀完課文故事很多次" },
-  GAME_LOVER: { name: "遊戲狂熱", desc: "遊玩小遊戲" },
+GAME_LOVER: { name: "遊戲狂熱", desc: "單次達成 3 / 6 / 10 場連續遊戲" },
   VOCAB_DRILLER: { name: "單字達人", desc: "完成單字練習" },
   GRAMMAR_NERD: { name: "文法專家", desc: "完成文法練習" },
   XP_COLLECTOR: { name: "經驗收藏家", desc: "累積 XP 點數" },
@@ -27,7 +27,7 @@ export const BADGE_META: Record<string, { name: string; desc: string }> = {
   ARRANGE_PRO: { name: "組句高手", desc: "句子排列滿分" },
   ACCURACY_GOD: { name: "精準打擊", desc: "高準確率通關" },
   LEVEL_CRUSHER: { name: "過關斬將", desc: "通過許多關卡" },
-  UNIT_MASTER: { name: "單元制霸", desc: "多個單元達到三星" },
+UNIT_MASTER: { name: "單元制霸", desc: "挑戰區 3★ 關卡累積數" },
 
   // 鼓勵類 Encouragement
   PERSISTENT: { name: "越挫越勇", desc: "從錯誤中不斷學習" },
