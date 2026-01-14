@@ -24,9 +24,8 @@ export type BadgeTier = 0 | 1 | 2 | 3; // 0: 未解鎖, 1: 銅, 2: 銀, 3: 金
 
 export type BadgeProgress = {
   tier: BadgeTier;
-  unlockedAtByTier?: Partial<Record<1|2|3, string>>;
+  unlockedAtByTier?: Partial<Record<1 | 2 | 3, string>>;
 };
-
 
 export type UnitProgress = {
   stars: number; // 單元整體 0–3 星
@@ -97,30 +96,23 @@ export const BADGE_QR: Record<
   }
 > = {
   // 參與類 Participation —— 只要願意做就有
-  LOGIN_STREAK: { type: "participation", thresholds: [1, 5, 20] }, // 累積登入次數
-  TIME_KEEPER: { type: "participation", thresholds: [180, 480, 900] }, // 累積時間：3 分 /  8分 / 15分
   STORY_FAN: { type: "participation", thresholds: [1, 5, 10] }, // 完整閱讀故事 1 / 5 / 10 次
   GAME_LOVER: { type: "participation", thresholds: [3, 6, 10] }, // 連續遊戲場數（3 / 6 / 10 場）
   VOCAB_DRILLER: { type: "participation", thresholds: [3, 10, 30] }, // 單字練習次數
   GRAMMAR_NERD: { type: "participation", thresholds: [3, 10, 30] }, // 文法練習次數
   XP_COLLECTOR: { type: "participation", thresholds: [100, 500, 2000] }, // 累積 XP
-  UNIT_EXPLORER: { type: "participation", thresholds: [1, 3, 6] }, // 解鎖單元數
-  CLICK_MASTER: { type: "participation", thresholds: [50, 200, 1000] }, // 互動總數（以 gamesPlayed + hints 等近似）
   REVIEWER: { type: "participation", thresholds: [2, 10, 20] }, // 複習（重複遊玩）
   AUDIO_LEARNER: { type: "participation", thresholds: [10, 50, 100] }, // 累積點擊發音
 
   // 技巧類 Skill —— 給高成就 / 實力導向的學生
   SNAKE_MASTER: { type: "skill", thresholds: [10, 30, 60] }, // 貪吃蛇最高分
   TETRIS_ARCH: { type: "skill", thresholds: [10, 40, 80] }, // 文法 Tetris 消行數
-  QUIZ_SNIPER: { type: "skill", thresholds: [1, 5, 10] }, // 單字／關卡滿分次數
   // 秒數越少越好：銅 50s、銀 40s、金 30s
   SPEED_DEMON: { type: "skill", thresholds: [50, 40, 30], reverse: true },
-  CHALLENGE_KING: { type: "skill", thresholds: [1, 5, 10] }, // 挑戰模式滿分關數
   STAR_CATCHER: { type: "skill", thresholds: [3, 9, 18] }, // 總星星數
-  ARRANGE_PRO: { type: "skill", thresholds: [1, 5, 10] }, // 排列句子滿分次數
   ACCURACY_GOD: { type: "skill", thresholds: [5, 15, 30] }, // 高準確率通關次數（以 perfectRuns 代理）
-  LEVEL_CRUSHER: { type: "skill", thresholds: [2, 10, 30] }, // 通過關卡總數
-  UNIT_MASTER: { type: "skill", thresholds: [1, 3, 6] }, // 滿星單元數
+  LEVEL_CRUSHER: { type: "skill", thresholds: [3, 6, 10] }, // 通過關卡總數
+  UNIT_MASTER: { type: "skill", thresholds: [3, 6, 10] }, // 挑戰區 3★ 關卡累積數
 
   // 鼓勵類 Encouragement —— 獎勵失敗、嘗試與堅持
   PERSISTENT: { type: "encouragement", thresholds: [5, 20, 50] }, // 累積錯誤
@@ -222,10 +214,7 @@ export function getBadgeValue(key: string, p: Progress): number {
 
   switch (key) {
     // Participation
-    case "LOGIN_STREAK":
-      return s.totalLogins;
-    case "TIME_KEEPER":
-      return s.totalTimeSec;
+
     case "STORY_FAN":
       return s.storiesRead;
     // GAME_LOVER：最大連續遊戲場數
@@ -237,10 +226,6 @@ export function getBadgeValue(key: string, p: Progress): number {
       return units.reduce((acc, u) => acc + u.grammar.studied, 0);
     case "XP_COLLECTOR":
       return p.totalXP;
-    case "UNIT_EXPLORER":
-      return units.filter((u) => u.xp > 0).length;
-    case "CLICK_MASTER":
-      return s.gamesPlayed + s.storiesRead + s.totalHints;
     case "REVIEWER":
       return s.gamesPlayed;
     case "AUDIO_LEARNER":
@@ -255,22 +240,17 @@ export function getBadgeValue(key: string, p: Progress): number {
       const maxTetris = Math.max(...units.map((u) => u.grammar.reorderBest), 0);
       return maxTetris;
     }
-    case "QUIZ_SNIPER":
-      return s.perfectRuns;
     case "SPEED_DEMON": {
+      // ✅ 只計入「至少 1★」的關卡秒數，避免 0★ 刷秒
       const allTimes = units
-        .map((u) => u.challenge.bestTimeSec)
-        .filter((t) => t > 0);
+        .flatMap((u) => Object.values(u.challenge.levels || {}))
+        .filter((lv) => (lv.stars ?? 0) >= 1 && (lv.bestTimeSec ?? 0) > 0)
+        .map((lv) => lv.bestTimeSec);
+
       const fastest = allTimes.length > 0 ? Math.min(...allTimes) : 0;
       return fastest;
     }
-    case "CHALLENGE_KING": {
-      const challengeFullMarks = units.reduce(
-        (acc, u) => acc + (u.challenge.bestScore === 10 ? 1 : 0),
-        0
-      );
-      return challengeFullMarks;
-    }
+
     case "STAR_CATCHER": {
       const challengeStars = units.reduce((acc, u) => {
         const levelStars = Object.values(u.challenge.levels || {}).reduce(
@@ -281,17 +261,20 @@ export function getBadgeValue(key: string, p: Progress): number {
       }, 0);
       return challengeStars;
     }
-    case "ARRANGE_PRO":
-      return s.arrangePerfectRuns;
     case "ACCURACY_GOD":
       return s.snakeCorrectTotal;
     case "LEVEL_CRUSHER": {
-      const totalCleared = units.reduce(
-        (acc, u) => acc + u.challenge.clearedLevels,
-        0
-      );
-      return totalCleared;
+      // ✅ 改成「通過的關卡數」：passed === true 或 stars >= 2 都算通關
+      const passedCount = units.reduce((acc, u) => {
+        const passedInUnit = Object.values(u.challenge.levels || {}).filter(
+          (lv) => lv.passed === true || (lv.stars ?? 0) >= 2
+        ).length;
+        return acc + passedInUnit;
+      }, 0);
+
+      return passedCount;
     }
+
     case "UNIT_MASTER": {
       // 單元制霸：統計「挑戰區拿到 3★ 的關卡數」
       const totalThreeStarLevels = units.reduce((acc, u) => {
@@ -371,7 +354,6 @@ function evaluateBadges(p: Progress): Progress {
     lastBadgeEvents: unlockedEvents,
   };
 }
-
 
 // === Reducer ===
 
@@ -564,6 +546,24 @@ export function useProgress() {
     loadingProgress: loading,
   };
 }
+function sanitizeBadges(input: any): Record<string, BadgeProgress> {
+  const out: Record<string, BadgeProgress> = {};
+
+  for (const [k, v] of Object.entries(input ?? {})) {
+    const rawTier = (v as any)?.tier;
+    const tierNum = typeof rawTier === "string" ? Number(rawTier) : rawTier;
+    const tier: BadgeTier =
+      tierNum === 1 || tierNum === 2 || tierNum === 3 ? tierNum : 0;
+
+    // ✅ v 可能是 null/undefined/非物件，避免 ...v 爆炸
+    const base = v && typeof v === "object" ? (v as any) : {};
+
+    out[k] = { ...base, tier };
+  }
+
+  return out;
+}
+
 
 // === Supabase 存取 ===
 
@@ -588,7 +588,7 @@ async function restore(userId: string): Promise<Progress> {
         ...remote,
         lastBadgeEvents: [],
         byUnit: { ...def.byUnit, ...(remote.byUnit ?? {}) },
-        badges: { ...def.badges, ...(remote.badges ?? {}) },
+badges: sanitizeBadges({ ...def.badges, ...(remote.badges ?? {}) }),
         stats: { ...def.stats, ...(remote.stats ?? {}) },
       };
     }

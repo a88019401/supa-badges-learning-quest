@@ -5,29 +5,22 @@ import { BADGE_QR, getBadgeValue } from "../state/progress";
 // 顯示文字（名稱 + 說明）
 export const BADGE_META: Record<string, { name: string; desc: string }> = {
   // 參與類 Participation
-LOGIN_STREAK: { name: "常來報到", desc: "累積登入次數" },
-  TIME_KEEPER: { name: "時間管理者", desc: "累積學習時數" },
   STORY_FAN: { name: "故事迷", desc: "完整讀完課文故事很多次" },
-GAME_LOVER: { name: "遊戲狂熱", desc: "單次達成 3 / 6 / 10 場連續遊戲" },
+  GAME_LOVER: { name: "遊戲狂熱", desc: "單次達成 3 / 6 / 10 場連續遊戲" },
   VOCAB_DRILLER: { name: "單字達人", desc: "完成單字練習" },
   GRAMMAR_NERD: { name: "文法專家", desc: "完成文法練習" },
   XP_COLLECTOR: { name: "經驗收藏家", desc: "累積 XP 點數" },
-  UNIT_EXPLORER: { name: "探險家", desc: "解鎖不同單元" },
-  CLICK_MASTER: { name: "行動派", desc: "熱衷各種點擊互動" },
-  REVIEWER: { name: "溫故知新", desc: "願意多次重複練習" },
+  REVIEWER: { name: "愛玩遊戲", desc: "瘋狂玩遊戲" },
   AUDIO_LEARNER: { name: "聽力小耳朵", desc: "點擊單字發音練習聽力" },
 
   // 技巧類 Skill
   SNAKE_MASTER: { name: "貪吃蛇王", desc: "貪吃蛇高分高手" },
   TETRIS_ARCH: { name: "方塊建築師", desc: "文法方塊高手" },
-  QUIZ_SNIPER: { name: "學院派", desc: "多次拿到滿分" },
   SPEED_DEMON: { name: "極速傳說", desc: "以極快速度完成挑戰" },
-  CHALLENGE_KING: { name: "挑戰王者", desc: "挑戰模式滿分關卡" },
   STAR_CATCHER: { name: "摘星者", desc: "收集大量星星" },
-  ARRANGE_PRO: { name: "組句高手", desc: "句子排列滿分" },
-  ACCURACY_GOD: { name: "精準打擊", desc: "高準確率通關" },
+  ACCURACY_GOD: { name: "愛吃的蛇", desc: "貪吃蛇每場「答對數」的累積總和" },
   LEVEL_CRUSHER: { name: "過關斬將", desc: "通過許多關卡" },
-UNIT_MASTER: { name: "單元制霸", desc: "挑戰區 3★ 關卡累積數" },
+  UNIT_MASTER: { name: "單元制霸", desc: "挑戰區 3★ 關卡累積數" },
 
   // 鼓勵類 Encouragement
   PERSISTENT: { name: "越挫越勇", desc: "從錯誤中不斷學習" },
@@ -65,7 +58,10 @@ export const TIER_ICONS: Record<BadgeTier, string> = {
 };
 
 export default function BadgesView({ progress }: { progress: Progress }) {
-  const categories: Record<"participation" | "skill" | "encouragement", string> = {
+  const categories: Record<
+    "participation" | "skill" | "encouragement",
+    string
+  > = {
     participation: "參與類 Participation",
     skill: "技巧類 Skill",
     encouragement: "鼓勵類 Encouragement",
@@ -83,8 +79,15 @@ export default function BadgesView({ progress }: { progress: Progress }) {
               .filter(([, cfg]) => cfg.type === cat)
               .map(([key, cfg]) => {
                 const meta = BADGE_META[key] ?? { name: key, desc: "" };
-                const userBadge = progress.badges[key] ?? { tier: 0 as BadgeTier };
-                const tier = userBadge.tier;
+                const userBadge = progress.badges[key] ?? {
+                  tier: 0 as BadgeTier,
+                };
+                // ✅ 防呆：tier 只能是 0/1/2/3，其他一律當 0（未解鎖）
+const rawTier = (userBadge as any).tier;
+const tierNum = typeof rawTier === "string" ? Number(rawTier) : rawTier;
+const tier: BadgeTier =
+  tierNum === 1 || tierNum === 2 || tierNum === 3 ? tierNum : 0;
+
                 const style = TIER_STYLES[tier];
                 const icon = TIER_ICONS[tier];
                 const tierName = TIER_NAMES[tier];
@@ -124,7 +127,9 @@ export default function BadgesView({ progress }: { progress: Progress }) {
                     diffText = `已達 ${nextTierLabel} 門檻`;
                   } else {
                     const faster = currentVal - nextTarget;
-                    diffText = `再快約 ${Math.round(faster)} 秒，可達 ${nextTierLabel}`;
+                    diffText = `再快約 ${Math.round(
+                      faster
+                    )} 秒，可達 ${nextTierLabel}`;
                   }
                 }
 
@@ -148,8 +153,12 @@ export default function BadgesView({ progress }: { progress: Progress }) {
                     className={`relative p-4 rounded-2xl border transition hover:scale-[1.02] cursor-default ${style}`}
                     title={meta.desc}
                   >
-                    <div className="text-3xl mb-2 text-center drop-shadow-sm">{icon}</div>
-                    <div className="font-bold text-center text-sm mb-1">{meta.name}</div>
+                    <div className="text-3xl mb-2 text-center drop-shadow-sm">
+                      {icon}
+                    </div>
+                    <div className="font-bold text-center text-sm mb-1">
+                      {meta.name}
+                    </div>
                     <div className="text-xs text-center opacity-80 min-h-[2.5em] flex items-center justify-center">
                       {meta.desc}
                     </div>
@@ -165,12 +174,9 @@ export default function BadgesView({ progress }: { progress: Progress }) {
                       <div className="mt-1 text-[10px] text-neutral-700 leading-snug text-left">
                         {!isReverse ? (
                           <>
-                            目前：<span className="font-mono">{currentVal}</span>{" "}
-                            {tier < 3 && (
-                              <>
-                                ｜{diffText}
-                              </>
-                            )}
+                            目前：
+                            <span className="font-mono">{currentVal}</span>{" "}
+                            {tier < 3 && <>｜{diffText}</>}
                             {tier === 3 && <>｜{diffText}</>}
                           </>
                         ) : (
@@ -191,14 +197,12 @@ export default function BadgesView({ progress }: { progress: Progress }) {
                       </span>
                       <span className="opacity-60 text-right leading-tight">
                         目標：
-                        <br />
-                        銅 {bronze}／銀 {silver}／金 {gold}
+                        <br />銅 {bronze}／銀 {silver}／金 {gold}
                       </span>
                     </div>
                   </div>
                 );
               })}
-
           </div>
         </section>
       ))}

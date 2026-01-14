@@ -567,32 +567,32 @@ function LearningQuestApp() {
   >([]);
 
   // 當 progress.lastBadgeEvents 有新東西，就塞進 toast queue
-// ✅ 放在 badgeToasts state 旁邊
-const seenBadgeEventIds = useRef<Set<string>>(new Set());
+  // ✅ 放在 badgeToasts state 旁邊
+  const seenBadgeEventIds = useRef<Set<string>>(new Set());
 
-useEffect(() => {
-  const events = progress.lastBadgeEvents ?? [];
-  if (!events.length) return;
+  useEffect(() => {
+    const events = progress.lastBadgeEvents ?? [];
+    if (!events.length) return;
 
-  const fresh = events.filter((ev) => {
-    const id = `${ev.key}-${ev.tier}-${ev.unlockedAt}`;
-    if (seenBadgeEventIds.current.has(id)) return false;
-    seenBadgeEventIds.current.add(id);
-    return true;
-  });
+    const fresh = events.filter((ev) => {
+      const id = `${ev.key}-${ev.tier}-${ev.unlockedAt}`;
+      if (seenBadgeEventIds.current.has(id)) return false;
+      seenBadgeEventIds.current.add(id);
+      return true;
+    });
 
-  if (!fresh.length) return;
+    if (!fresh.length) return;
 
-  setBadgeToasts((prev) => [
-    ...prev,
-    ...fresh.map((ev, idx) => ({
-      id: `${ev.key}-${ev.tier}-${ev.unlockedAt}-${idx}`,
-      key: ev.key,
-      tier: ev.tier,
-      unlockedAt: ev.unlockedAt,
-    })),
-  ]);
-}, [progress.lastBadgeEvents]);
+    setBadgeToasts((prev) => [
+      ...prev,
+      ...fresh.map((ev, idx) => ({
+        id: `${ev.key}-${ev.tier}-${ev.unlockedAt}-${idx}`,
+        key: ev.key,
+        tier: ev.tier,
+        unlockedAt: ev.unlockedAt,
+      })),
+    ]);
+  }, [progress.lastBadgeEvents]);
 
   // 自動在 3.5 秒後移除 toast（會慢慢淡出）
   useEffect(() => {
@@ -706,7 +706,8 @@ useEffect(() => {
 
     const starsThisRun = computeLevelStars(score);
     const passed = starsThisRun >= 2;
-
+    // ✅ 取得至少 1★ 才記秒數（防止 0★ 刷「極速傳說」）
+    const recordTime = starsThisRun >= 1;
     const prevLv = uProg.challenge.levels?.[level];
     // 成績進步很多（這裡定義：比之前最佳高 3 分以上）
     const improvedALot = prevLv && score - prevLv.bestScore >= 3;
@@ -731,18 +732,23 @@ useEffect(() => {
     // === 原本的進度更新邏輯 ===
     const newLv = {
       bestScore: Math.max(prevLv?.bestScore ?? 0, score),
-      bestTimeSec: prevLv?.bestTimeSec
-        ? Math.min(prevLv.bestTimeSec, timeUsed)
-        : timeUsed,
+      // ✅ 只有及格（>=1★）才更新秒數；不及格就沿用舊紀錄（或 0）
+      bestTimeSec: recordTime
+        ? prevLv?.bestTimeSec
+          ? Math.min(prevLv.bestTimeSec, timeUsed)
+          : timeUsed
+        : prevLv?.bestTimeSec ?? 0,
+
       stars: Math.max(prevLv?.stars ?? 0, starsThisRun),
       passed: prevLv?.passed === true ? true : passed,
     };
 
     const bestScore = Math.max(uProg.challenge.bestScore, score);
-    const bestTime =
-      uProg.challenge.bestTimeSec === 0
+    const bestTime = recordTime
+      ? uProg.challenge.bestTimeSec === 0
         ? timeUsed
-        : Math.min(uProg.challenge.bestTimeSec, timeUsed);
+        : Math.min(uProg.challenge.bestTimeSec, timeUsed)
+      : uProg.challenge.bestTimeSec;
 
     const nextLevels = { ...(uProg.challenge.levels || {}), [level]: newLv };
     const nextUnlocked = calcUnlockedCount(nextLevels, 10);
@@ -786,7 +792,7 @@ useEffect(() => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-neutral-100 to-neutral-50 text-neutral-900">
       {/* Header */}
-      
+
       <header className="max-w-5xl mx-auto px-4 py-5 flex items-center justify-between">
         <div>
           <div className="text-2xl font-bold tracking-tight">
@@ -819,19 +825,19 @@ useEffect(() => {
             onClick={() => setTab("leaderboard")}
           >
             排行榜
-          </TabButton>    {/* ✅ 新增登出 */}
-    <button
-      onClick={async () => {
-        await supabase.auth.signOut();
-        // 不用手動 redirect，AuthContext 會收到 SIGNED_OUT
-      }}
-      className="px-3 py-2 rounded-xl border text-sm bg-white hover:bg-neutral-50"
-      title="實驗或共用電腦建議一定要登出"
-    >
-      登出
-    </button>
+          </TabButton>{" "}
+          {/* ✅ 新增登出 */}
+          <button
+            onClick={async () => {
+              await supabase.auth.signOut();
+              // 不用手動 redirect，AuthContext 會收到 SIGNED_OUT
+            }}
+            className="px-3 py-2 rounded-xl border text-sm bg-white hover:bg-neutral-50"
+            title="實驗或共用電腦建議一定要登出"
+          >
+            登出
+          </button>
         </div>
-        
       </header>
 
       <main className="max-w-5xl mx-auto px-4 pb-10">
@@ -1058,7 +1064,7 @@ useEffect(() => {
                         stars: computeLevelStars(r.correct),
                         timeUsed: r.usedTime,
                         //passed: r.passed,
-                        passed: safePassed, 
+                        passed: safePassed,
                         items,
                       });
                       setModalOpen(true);
