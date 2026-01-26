@@ -6,7 +6,7 @@ import { useAuth } from "./AuthContext";
 
 // === 型別定義 ===
 export type BadgeUnlockEvent = {
-  //key: string; // 例如 "STORY_FAN"
+  key: string; // 例如 "STORY_FAN"
   tier: BadgeTier; // 1, 2, 3
   unlockedAt: string;
 };
@@ -180,13 +180,13 @@ const defaultProgress = (): Progress => ({
 
 // === 工具函式 ===
 
-function computeStars(u: UnitProgress): number {
+{/*function computeStars(u: UnitProgress): number {
   let s = 0;
   if (u.vocab.quizBest >= 8) s++;
   if (u.grammar.reorderBest >= 1) s++; // 做過一次文法遊戲就給一顆
   if (u.text.arrangeBest >= 8) s++;
   return s;
-}
+}*/}
 
 function checkTier(
   current: number,
@@ -377,7 +377,7 @@ function reducer(state: Progress, action: Action): Progress {
       const byUnit = { ...state.byUnit };
       const u = byUnit[action.unit] ?? defaultUnitProgress();
       const nextUnit: UnitProgress = { ...u, xp: u.xp + action.amount };
-      nextUnit.stars = computeStars(nextUnit);
+      //nextUnit.stars = computeStars(nextUnit);
       byUnit[action.unit] = nextUnit;
       return evaluateBadges({
         ...state,
@@ -397,7 +397,7 @@ function reducer(state: Progress, action: Action): Progress {
         text: { ...prev.text, ...(patch.text ?? {}) },
         challenge: { ...prev.challenge, ...(patch.challenge ?? {}) },
       };
-      nextUnit.stars = computeStars(nextUnit);
+      //nextUnit.stars = computeStars(nextUnit);
       byUnit[action.unit] = nextUnit;
       return evaluateBadges({ ...state, byUnit });
     }

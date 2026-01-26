@@ -846,10 +846,10 @@ function LearningQuestApp() {
           <Card>
             <div className="text-sm text-neutral-500">目前單元</div>
             <div className="text-lg font-semibold">{unit.title}</div>
-            <div className="mt-2 text-sm">
+            {/*<div className="mt-2 text-sm">
               星等：{"⭐".repeat(uProg.stars)}
               {"☆".repeat(3 - uProg.stars)}
-            </div>
+            </div>*/}
           </Card>
           <Card>
             <div className="text-sm text-neutral-500">本單元 XP</div>
