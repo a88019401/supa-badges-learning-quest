@@ -566,74 +566,33 @@ function LearningQuestApp() {
     { id: string; key: string; tier: BadgeTier; unlockedAt: string }[]
   >([]);
 
-  // 當 progress.lastBadgeEvents 有新東西，就塞進 toast queue
-  // ✅ 放在 badgeToasts state 旁邊
-  const seenBadgeEventIds = useRef<Set<string>>(new Set());
-
-  useEffect(() => {
-    const events = progress.lastBadgeEvents ?? [];
-    if (!events.length) return;
-
-    const fresh = events.filter((ev) => {
-      const id = `${ev.key}-${ev.tier}-${ev.unlockedAt}`;
-      if (seenBadgeEventIds.current.has(id)) return false;
-      seenBadgeEventIds.current.add(id);
-      return true;
-    });
-
-    if (!fresh.length) return;
-
-    setBadgeToasts((prev) => [
-      ...prev,
-      ...fresh.map((ev, idx) => ({
-        id: `${ev.key}-${ev.tier}-${ev.unlockedAt}-${idx}`,
-        key: ev.key,
-        tier: ev.tier,
-        unlockedAt: ev.unlockedAt,
-      })),
-    ]);
-  }, [progress.lastBadgeEvents]);
-
-// 用來管理計時器，避免記憶體洩漏
+  // 用來管理計時器，避免記憶體洩漏
   const timersRef = useRef<Set<NodeJS.Timeout>>(new Set());
 
   // 1. 監聽新事件並加入 Toast 列表
-  useEffect(() => {
-    const events = progress.lastBadgeEvents ?? [];
-    if (!events.length) return;
+useEffect(() => {
+  const events = progress.lastBadgeEvents ?? [];
+  if (!events.length) return;
 
-    // 過濾出還沒顯示過的全新事件
-    const fresh = events.filter((ev) => {
-      const id = `${ev.key}-${ev.tier}-${ev.unlockedAt}`;
-      if (seenBadgeEventIds.current.has(id)) return false;
-      seenBadgeEventIds.current.add(id);
-      return true;
-    });
+  // ✅ 不再用 seenBadgeEventIds 過濾，每次都顯示（因為 lastBadgeEvents 只在新獲得時才有值）
+  const newToasts = events.map((ev, idx) => ({
+    id: `${ev.key}-${ev.tier}-${ev.unlockedAt}-${idx}-${Date.now()}`,
+    key: ev.key,
+    tier: ev.tier,
+    unlockedAt: ev.unlockedAt,
+  }));
 
-    if (!fresh.length) return;
+  setBadgeToasts((prev) => [...prev, ...newToasts]);
 
-    // 建立新 Toasts 物件
-    const newToasts = fresh.map((ev, idx) => ({
-      id: `${ev.key}-${ev.tier}-${ev.unlockedAt}-${idx}`,
-      key: ev.key,
-      tier: ev.tier,
-      unlockedAt: ev.unlockedAt,
-    }));
+  newToasts.forEach((toast) => {
+    const timerId = setTimeout(() => {
+      setBadgeToasts((prev) => prev.filter((t) => t.id !== toast.id));
+      timersRef.current.delete(timerId);
+    }, 3500);
 
-    // 更新狀態顯示
-    setBadgeToasts((prev) => [...prev, ...newToasts]);
-
-    // ✨ 關鍵修正：只為「新加入」的通知設定倒數，不影響舊的
-    newToasts.forEach((toast) => {
-      const timerId = setTimeout(() => {
-        setBadgeToasts((prev) => prev.filter((t) => t.id !== toast.id));
-        timersRef.current.delete(timerId); // 執行完後移除紀錄
-      }, 3500);
-      
-      timersRef.current.add(timerId); // 紀錄 ID 以便卸載時清除
-    });
-
-  }, [progress.lastBadgeEvents]); 
+    timersRef.current.add(timerId);
+  });
+}, [progress.lastBadgeEvents]); // ✅ 改這裡
 
   // 2. 元件卸載時的清理 (Cleanup)
   useEffect(() => {
@@ -1124,6 +1083,7 @@ function LearningQuestApp() {
                         vocab: {
                           ...uProg.vocab,
                           quizBest: Math.max(uProg.vocab.quizBest, score),
+                          studied: (uProg.vocab.studied || 0) + 1,
                         },
                       });
                       reportActivity({
