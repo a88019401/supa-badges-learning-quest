@@ -292,8 +292,11 @@ export default function VocabSet({
 
               {/* 主要文字更大 */}
               <div className="text-2xl md:text-[1.75rem] font-semibold">{isBack ? w.term : w.def}</div>
-              {isBack && w.example && <div className="text-xs text-neutral-500 mt-1">{w.example}</div>}
-
+{isBack && w.example && (
+  <div className="text-xs text-neutral-500 mt-1">
+    {typeof w.example === "string" ? w.example : w.example.en}
+  </div>
+)}
               {/* 操作列：僅在英文面顯示 */}
               {isBack && (
                 <div className="mt-3 space-y-1">
