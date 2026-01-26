@@ -1107,17 +1107,20 @@ function LearningQuestApp() {
                 (grammarView === "explain" ? (
                   <GrammarExplain
                     points={unit.grammar}
-                    onStudied={() => {
-                      addXP(unitId, 5);
-                      patchUnit(unitId, {
+                    // 1. onAcquire: 每次按「掌握」都會觸發，次數 +1，並給一點點 XP
+                    onAcquire={() => {
+                      patchUnit(unit.id, {
                         grammar: {
-                          ...uProg.grammar,
-                          studied: uProg.grammar.studied + 1,
+                          studied: (uProg.grammar.studied || 0) + 1, // ✨ 這裡 +1
+                          reorderBest: uProg.grammar.reorderBest,
                         },
                       });
-
-                      // 文法研讀 = 學習行為
-                      reportActivity({ isLearn: true });
+                      addXP(unit.id, 10); // ✨ 每學一個觀念給 10 XP
+                    }}
+                    // 2. onComplete: 全部學完後，給一個大獎勵 (不加次數，只給分)
+                    onComplete={() => {
+                      addXP(unit.id, 50); // ✨ 全部完成給 50 XP
+                      toast.success("文法資料庫完全同步！獲得 Bonus XP！");
                     }}
                   />
                 ) : (
