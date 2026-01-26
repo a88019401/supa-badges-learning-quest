@@ -96,50 +96,50 @@ const UNIT1_WORDS: UnitConfig["words"] = [
   { term: "make up for", def: "phr. 彌補…（+ N / V-ing）" },
 ];
 
-// ✅ Unit 1：文法重點（清潔版：每條 examples 皆為單一句子，無破折號/對話標記）
+// ✅ Unit 1：文法重點（已升級為雙語例句）
 const UNIT1_GRAMMAR: UnitConfig["grammar"] = [
   // A. be 動詞（補強）
   {
     point: "be 動詞（am / is / are）：用法與意義",
     desc: "描述身分、特質、位置或狀態；後可接名詞、形容詞或介系詞片語。常見縮寫：I’m / you’re / he’s…；否定：isn’t / aren’t。",
     examples: [
-      "Ms. Wang is our PE teacher.",
-      "You’re very kind.",
-      "The library is next to the gym.",
-      "I’m not hungry now.",
+      { en: "Ms. Wang is our PE teacher.", zh: "王老師是我們的體育老師。" },
+      { en: "You’re very kind.", zh: "你人真好。" },
+      { en: "The library is next to the gym.", zh: "圖書館在體育館旁邊。" },
+      { en: "I’m not hungry now.", zh: "我現在不餓。" },
     ],
   },
   {
     point: "be 動詞：肯定／否定／Yes–No 問句與簡答",
     desc: "肯定：S + be ...；否定：S + be + not ...；問句：Be + S ...? 簡答：Yes, S + be. / No, S + be + not.",
     examples: [
-      "My father is a doctor.",
-      "My father isn’t a doctor.",
-      "Is your sister a nurse?",
-      "Yes, she is.",
-      "Are they in the same class?",
-      "No, they aren’t.",
+      { en: "My father is a doctor.", zh: "我父親是一位醫生。" },
+      { en: "My father isn’t a doctor.", zh: "我父親不是一位醫生。" },
+      { en: "Is your sister a nurse?", zh: "你的姐姐是護理師嗎？" },
+      { en: "Yes, she is.", zh: "是的，她是。" },
+      { en: "Are they in the same class?", zh: "他們在同一班嗎？" },
+      { en: "No, they aren’t.", zh: "不，他們不是。" },
     ],
   },
   {
     point: "be 動詞的 Wh- 問句（Who / What / Where）",
     desc: "Wh- + be + S ...? 用來問身分、事物或地點；who 作主詞時，多用單數動詞。",
     examples: [
-      "Where is the sports club?",
-      "It is across from the gym.",
-      "Who is that tall player?",
-      "He is our captain.",
-      "What is your favorite subject?",
-      "My favorite subject is English.",
+      { en: "Where is the sports club?", zh: "運動社團在哪裡？" },
+      { en: "It is across from the gym.", zh: "它在體育館對面。" },
+      { en: "Who is that tall player?", zh: "那位高個子球員是誰？" },
+      { en: "He is our captain.", zh: "他是我們的隊長。" },
+      { en: "What is your favorite subject?", zh: "你最喜歡的科目是什麼？" },
+      { en: "My favorite subject is English.", zh: "我最喜歡的科目是英文。" },
     ],
   },
   {
     point: "形容詞：位置與用法",
     desc: "形容詞可放在 be 動詞後修飾主詞，也可放在名詞前修飾名詞；少數形容詞（如 afraid）僅能放在 be 後面。",
     examples: [
-      "She is tall.",
-      "She is a tall girl.",
-      "He is afraid of snakes.",
+      { en: "She is tall.", zh: "她很高。" },
+      { en: "She is a tall girl.", zh: "她是個高個子的女孩。" },
+      { en: "He is afraid of snakes.", zh: "他害怕蛇。" },
     ],
   },
 
@@ -148,53 +148,68 @@ const UNIT1_GRAMMAR: UnitConfig["grammar"] = [
     point: "現在簡單式：使用時機與時間副詞",
     desc: "表習慣、事實與固定行程。常見：every + 時間；on + 複數時間（on Sundays / Sunday mornings / weekends）。時間語可放句尾或句首（句首後加逗號）。",
     examples: [
-      "Every Friday, we have practice.",
-      "On Sunday mornings, I go jogging.",
-      "They study after dinner.",
+      {
+        en: "Every Friday, we have practice.",
+        zh: "每個星期五，我們都有練習。",
+      },
+      {
+        en: "On Sunday mornings, I go jogging.",
+        zh: "在星期天早上，我去慢跑。",
+      },
+      { en: "They study after dinner.", zh: "他們晚餐後讀書。" },
     ],
   },
   {
     point: "現在簡單式（I / you / we / they）：肯定句",
     desc: "S + 原形動詞 + （其他） + （時間副詞）。",
-    examples: ["We play badminton after school.", "My parents have two dogs."],
+    examples: [
+      { en: "We play badminton after school.", zh: "我們放學後打羽毛球。" },
+      { en: "My parents have two dogs.", zh: "我的父母有兩隻狗。" },
+    ],
   },
   {
     point: "現在簡單式（I / you / we / they）：否定與 Yes–No 問句",
     desc: "否定：S + don’t + 原形動詞。問句：Do + S + 原形動詞 ...? 簡答：Yes, S do. / No, S don’t.",
     examples: [
-      "I don’t drink soda.",
-      "Do you read before bed?",
-      "Yes, I do.",
-      "Do they have club time on Mondays?",
-      "No, they don’t.",
+      { en: "I don’t drink soda.", zh: "我不喝汽水。" },
+      { en: "Do you read before bed?", zh: "你睡前會閱讀嗎？" },
+      { en: "Yes, I do.", zh: "是的，我會。" },
+      {
+        en: "Do they have club time on Mondays?",
+        zh: "他們星期一有社團時間嗎？",
+      },
+      { en: "No, they don’t.", zh: "不，他們沒有。" },
     ],
   },
   {
     point: "第三人稱單數：動詞變化與句型",
     desc: "一般加 -s；字尾 o/x/ss/sh/ch 加 -es；子音 + y → 去 y 加 -ies；不規則：have → has。肯定：S(he/she/it) + V-s/es/ies...；否定：S + doesn’t + 原形；問句：Does + S + 原形...?",
     examples: [
-      "He goes to school at seven.",
-      "Anna studies on the bus.",
-      "He has lunch at noon.",
-      "He doesn’t cook on weekdays.",
-      "Does Amy play the piano?",
-      "Yes, she does.",
+      { en: "He goes to school at seven.", zh: "他七點上學。" },
+      { en: "Anna studies on the bus.", zh: "Anna 在公車上讀書。" },
+      { en: "He has lunch at noon.", zh: "他中午吃午餐。" },
+      { en: "He doesn’t cook on weekdays.", zh: "他平日不做飯。" },
+      { en: "Does Amy play the piano?", zh: "Amy 會彈鋼琴嗎？" },
+      { en: "Yes, she does.", zh: "是的，她會。" },
     ],
   },
   {
     point: "Wh- 問句（do / does）",
     desc: "Wh- + do/does + S + 原形動詞 ...? 用來問習慣、地點、時間、對象或職業（What do you do?）。",
     examples: [
-      "What do you do on Fridays?",
-      "I watch movies.",
-      "Where does Leo practice basketball?",
-      "He practices at the gym.",
-      "When do they clean the classroom?",
-      "They clean the classroom after school.",
-      "Who waters the plants every day?",
-      "The monitors do.",
-      "What do you do?",
-      "I am a teacher.",
+      { en: "What do you do on Fridays?", zh: "你星期五都做什麼？" },
+      { en: "I watch movies.", zh: "我看電影。" },
+      { en: "Where does Leo practice basketball?", zh: "Leo 在哪裡練球？" },
+      { en: "He practices at the gym.", zh: "他在體育館練習。" },
+      { en: "When do they clean the classroom?", zh: "他們什麼時候打掃教室？" },
+      {
+        en: "They clean the classroom after school.",
+        zh: "他們放學後打掃教室。",
+      },
+      { en: "Who waters the plants every day?", zh: "誰每天澆花？" },
+      { en: "The monitors do.", zh: "值日生澆的。" },
+      { en: "What do you do?", zh: "你的職業是什麼？" },
+      { en: "I am a teacher.", zh: "我是一名老師。" },
     ],
   },
 
@@ -203,27 +218,45 @@ const UNIT1_GRAMMAR: UnitConfig["grammar"] = [
     point: "對等連接詞 and",
     desc: "連接相同詞性或子句；連接子句時可省略重複部分。",
     examples: [
-      "Mike and Tina are my classmates.",
-      "The park is big and beautiful.",
-      "Ivy’s daughter is a doctor, and her son is a doctor, too.",
+      {
+        en: "Mike and Tina are my classmates.",
+        zh: "Mike 和 Tina 是我的同學。",
+      },
+      { en: "The park is big and beautiful.", zh: "這公園又大又漂亮。" },
+      {
+        en: "Ivy’s daughter is a doctor, and her son is a doctor, too.",
+        zh: "Ivy 的女兒是醫生，而且她的兒子也是醫生。",
+      },
     ],
   },
   {
     point: "too / either 的用法",
     desc: "too 用於肯定句句尾（前加逗號）表『也』；too 亦可修飾形容詞表『太…』；either 用於否定句句尾表『也不』。",
     examples: [
-      "She is my English teacher, too.",
-      "The box is too small.",
-      "Mr. Lin isn’t my teacher, and Mr. Wang isn’t, either.",
+      { en: "She is my English teacher, too.", zh: "她也是我的英文老師。" },
+      { en: "The box is too small.", zh: "這盒子太小了。" },
+      {
+        en: "Mr. Lin isn’t my teacher, and Mr. Wang isn’t, either.",
+        zh: "林老師不是我的老師，王老師也不是。",
+      },
     ],
   },
   {
     point: "do / does 的對比句型",
-    desc: "A：S + V …, and + S + do/does, too.  B：S + don’t/doesn’t + V …, but + S + do/does.  C：S + V …, but + S + don’t/doesn’t.",
+    desc: "A：S + V …, and + S + do/does, too.  B：S + don’t/doesn’t + V …, but + S + do/does.  C：S + V …, but + S + don’t/doesn’t.",
     examples: [
-      "We go hiking twice a year, and our classmates do, too.",
-      "I don’t eat dessert at night, but my brother does.",
-      "They play volleyball on weekends, but we don’t.",
+      {
+        en: "We go hiking twice a year, and our classmates do, too.",
+        zh: "我們一年去爬山兩次，我們的同學也是。",
+      },
+      {
+        en: "I don’t eat dessert at night, but my brother does.",
+        zh: "我晚上不吃甜點，但我弟弟會吃。",
+      },
+      {
+        en: "They play volleyball on weekends, but we don’t.",
+        zh: "他們週末打排球，但我們不打。",
+      },
     ],
   },
 
@@ -233,19 +266,19 @@ const UNIT1_GRAMMAR: UnitConfig["grammar"] = [
       "描述外表：have/has + 形容詞 + 身體部位；所有格 + 部位 + be + 形容詞",
     desc: "A：S + have/has + (a/an) + 形容詞 + 身體部位。B：所有格 + 身體部位 + be + 形容詞。多個形容詞順序常為：主觀評價 → 尺寸 → 年紀 → 顏色。",
     examples: [
-      "I have short hair.",
-      "His eyes are brown.",
-      "Amy has beautiful green eyes.",
+      { en: "I have short hair.", zh: "我有短頭髮。" },
+      { en: "His eyes are brown.", zh: "他的眼睛是棕色的。" },
+      { en: "Amy has beautiful green eyes.", zh: "Amy 有漂亮的綠色眼睛。" },
     ],
   },
   {
     point: "How tall 問句與回答",
     desc: "問句：How tall + be + S? 回答：S + be + 數字 + 單位（centimeters/meters）(tall)。hundred 不加 -s（one hundred and seventy-five）。",
     examples: [
-      "How tall are you?",
-      "I am 160 centimeters tall.",
-      "How tall is that tree?",
-      "It is about two meters tall.",
+      { en: "How tall are you?", zh: "你多高？" },
+      { en: "I am 160 centimeters tall.", zh: "我身高 160 公分。" },
+      { en: "How tall is that tree?", zh: "那棵樹多高？" },
+      { en: "It is about two meters tall.", zh: "它大約兩公尺高。" },
     ],
   },
 
@@ -254,37 +287,40 @@ const UNIT1_GRAMMAR: UnitConfig["grammar"] = [
     point: "不定冠詞 a / an",
     desc: "單數可數名詞前用 a 或 an；以『字首發音』判斷：子音音→ a；母音音→ an。注意：uniform /juː-/ 用 a；字母念法為母音音（如 M /em/）用 an。",
     examples: [
-      "This is a teacher.",
-      "He is an angry teacher.",
-      "This is a uniform.",
-      "This is an umbrella.",
-      "This is an MRT.",
-      "This is a market.",
-      "This is an apple.",
-      "He is a doctor.",
+      { en: "This is a teacher.", zh: "這是一位老師。" },
+      { en: "He is an angry teacher.", zh: "他是一位生氣的老師。" },
+      { en: "This is a uniform.", zh: "這是一件制服。" },
+      { en: "This is an umbrella.", zh: "這是一把雨傘。" },
+      { en: "This is an MRT.", zh: "這是一輛捷運。" },
+      { en: "This is a market.", zh: "這是一個市場。" },
+      { en: "This is an apple.", zh: "這是一顆蘋果。" },
+      { en: "He is a doctor.", zh: "他是一位醫生。" },
     ],
   },
   {
     point: "定冠詞 the",
     desc: "指『已提過』或『說話者與聽者皆知道的』特定人事物，單複數名詞前皆可放。",
     examples: [
-      "My birthday party is this weekend.",
-      "The party is at my house.",
-      "Where is the bookstore?",
-      "It is next to the park.",
-      "Who are the boys?",
-      "They are my cousins.",
+      {
+        en: "My birthday party is this weekend.",
+        zh: "我的生日派對在這個週末。",
+      },
+      { en: "The party is at my house.", zh: "派對在我家舉辦。" },
+      { en: "Where is the bookstore?", zh: "書店在哪裡？" },
+      { en: "It is next to the park.", zh: "它在公園旁邊。" },
+      { en: "Who are the boys?", zh: "那些男孩是誰？" },
+      { en: "They are my cousins.", zh: "他們是我的表兄弟。" },
     ],
   },
   {
     point: "姓名與尊稱",
     desc: "Mr./Mrs./Miss/Ms. + 姓氏；Mr. and Mrs. + 姓氏 表『某氏夫婦』；姓名順序為 名字 first name + 姓氏 last name。",
     examples: [
-      "This is Mr. Lin.",
-      "Ms. Chen is my teacher.",
-      "Mr. and Mrs. Johnson are nurses.",
-      "This is Jackie Lin.",
-      "This is Benjamin Huang.",
+      { en: "This is Mr. Lin.", zh: "這是林先生。" },
+      { en: "Ms. Chen is my teacher.", zh: "陳女士是我的老師。" },
+      { en: "Mr. and Mrs. Johnson are nurses.", zh: "強森夫婦是護理師。" },
+      { en: "This is Jackie Lin.", zh: "這是 Jackie Lin。" },
+      { en: "This is Benjamin Huang.", zh: "這是 Benjamin Huang。" },
     ],
   },
 ];
@@ -500,8 +536,6 @@ const UNIT2_GRAMMAR: UnitConfig["grammar"] = [
   },
 ];
 
-
-
 // ✅ Unit 2：小故事（現在進行式 × 日記體）
 const UNIT2_STORY: UnitConfig["story"] = {
   title: "Diary 2: Right Now at the School Fair（此刻在園遊會）",
@@ -590,7 +624,6 @@ const UNIT2_STORY: UnitConfig["story"] = {
     "We are cleaning the stage and saying goodbye.",
   ],
 };
-
 
 /* =========================
    ✅ Unit 3: 過去簡單式（全新）
@@ -927,16 +960,16 @@ const UNIT4_GRAMMAR: UnitConfig["grammar"] = [
     examples: [
       "I was reading at nine last night.",
       "They were playing chess at that time.",
-      "She was not doing homework then."
-    ]
+      "She was not doing homework then.",
+    ],
   },
   {
     point: "與過去簡單式的差別（概念對比）",
     desc: "過去簡單式敘述已發生的事實；過去進行式強調當時進行中的背景動作。",
     examples: [
       "Mark wrote a letter last night.",
-      "Mark was writing a letter at nine last night."
-    ]
+      "Mark was writing a letter at nine last night.",
+    ],
   },
   {
     point: "常見時間語與位置",
@@ -944,8 +977,8 @@ const UNIT4_GRAMMAR: UnitConfig["grammar"] = [
     examples: [
       "At ten last night, I was writing my diary.",
       "They were waiting at the station this morning.",
-      "We were having dinner at that time."
-    ]
+      "We were having dinner at that time.",
+    ],
   },
   {
     point: "直述句：肯定／否定",
@@ -953,8 +986,8 @@ const UNIT4_GRAMMAR: UnitConfig["grammar"] = [
     examples: [
       "Jamie was washing the dishes.",
       "Jamie was not watching TV.",
-      "They were not doing their homework."
-    ]
+      "They were not doing their homework.",
+    ],
   },
   {
     point: "Yes–No 問句與簡答",
@@ -963,8 +996,8 @@ const UNIT4_GRAMMAR: UnitConfig["grammar"] = [
       "Was Zoe drying her hair then?",
       "Yes, she was.",
       "Were Pam and Papa fixing the drawer?",
-      "No, they were not."
-    ]
+      "No, they were not.",
+    ],
   },
   {
     point: "Wh- 問句：What / Where + was/were + S + V-ing",
@@ -973,16 +1006,16 @@ const UNIT4_GRAMMAR: UnitConfig["grammar"] = [
       "What were your parents doing at that time?",
       "They were wiping the windows.",
       "Where were you at six last night?",
-      "I was in the kitchen."
-    ]
+      "I was in the kitchen.",
+    ],
   },
   {
     point: "when 與過去進行式：短動作打斷長動作",
     desc: "用 when + 過去簡單式 搭配主句過去進行式，表『短暫動作發生時，另一動作正在進行』。",
     examples: [
       "I was sleeping when John called.",
-      "She broke the plate when she was doing the dishes."
-    ]
+      "She broke the plate when she was doing the dishes.",
+    ],
   },
   {
     point: "狀態動詞通常不用過去進行式",
@@ -990,8 +1023,8 @@ const UNIT4_GRAMMAR: UnitConfig["grammar"] = [
     examples: [
       "I knew the answer then.",
       "She liked the music last night.",
-      "They wanted a break at that time."
-    ]
+      "They wanted a break at that time.",
+    ],
   },
   {
     point: "主詞與 be 動詞選擇",
@@ -999,30 +1032,75 @@ const UNIT4_GRAMMAR: UnitConfig["grammar"] = [
     examples: [
       "I was cleaning the floor.",
       "You were not at home then.",
-      "Were they hanging the clothes?"
-    ]
-  }
+      "Were they hanging the clothes?",
+    ],
+  },
 ];
 
 // ✅ Unit 4：閱讀（過去進行式 × 雙語 × 排序題）
 const UNIT4_STORY: UnitConfig["story"] = {
   title: "Diary 4: Half Past Twelve at Home（十二點半的家中現場）",
   paragraphs: [
-    { en: "It was half past twelve, and the house was busy.", zh: "當時是十二點半，家裡正忙成一團。" },
-    { en: "Mom was doing the dishes in the kitchen, and the water was running.", zh: "媽媽在廚房洗碗，水還在流著。" },
-    { en: "Dad was mopping the floor, and he was humming a song.", zh: "爸爸正在拖地，還哼著一首歌。" },
-    { en: "My sister was hanging the clothes by the window.", zh: "我妹妹在窗邊晾衣服。" },
-    { en: "Grandma was feeding our pet rabbit in the yard.", zh: "奶奶在院子裡餵我們的寵物兔子。" },
-    { en: "I was fixing the old drawer, but the screw was stuck.", zh: "我在修舊抽屜，但螺絲卡住了。" },
-    { en: "Suddenly, someone knocked at the door, and the dog started barking.", zh: "突然，有人敲門，狗就開始叫。" },
-    { en: "When I opened the door, the wind blew through the hall.", zh: "我打開門時，一陣風從走廊穿過。" },
-    { en: "A plate slipped from Mom’s hand and broke into pieces.", zh: "一個盤子從媽媽手裡滑落，摔得粉碎。" },
-    { en: "Dad was wiping the water, and I was picking up the pieces carefully.", zh: "爸爸在擦水，而我小心地撿碎片。" },
-    { en: "Grandma said, “Take it easy.” We were all cooling down.", zh: "奶奶說：「放輕鬆。」我們大家都在冷靜下來。" },
-    { en: "At that time, my brother was running down the stairs with a big smile.", zh: "那時，我弟帶著大大的笑容從樓梯跑下來。" },
-    { en: "He was holding a card that said, “Lunch is ready!”", zh: "他拿著一張寫著「午餐好了！」的卡片。" },
-    { en: "Finally, we were sitting at the table and talking about the terrible mess.", zh: "最後，我們坐在餐桌前，聊著剛才那場糟糕的混亂。" },
-    { en: "We were laughing, and the house felt close and warm again.", zh: "我們笑著，家裡又變得溫暖而親近。" }
+    {
+      en: "It was half past twelve, and the house was busy.",
+      zh: "當時是十二點半，家裡正忙成一團。",
+    },
+    {
+      en: "Mom was doing the dishes in the kitchen, and the water was running.",
+      zh: "媽媽在廚房洗碗，水還在流著。",
+    },
+    {
+      en: "Dad was mopping the floor, and he was humming a song.",
+      zh: "爸爸正在拖地，還哼著一首歌。",
+    },
+    {
+      en: "My sister was hanging the clothes by the window.",
+      zh: "我妹妹在窗邊晾衣服。",
+    },
+    {
+      en: "Grandma was feeding our pet rabbit in the yard.",
+      zh: "奶奶在院子裡餵我們的寵物兔子。",
+    },
+    {
+      en: "I was fixing the old drawer, but the screw was stuck.",
+      zh: "我在修舊抽屜，但螺絲卡住了。",
+    },
+    {
+      en: "Suddenly, someone knocked at the door, and the dog started barking.",
+      zh: "突然，有人敲門，狗就開始叫。",
+    },
+    {
+      en: "When I opened the door, the wind blew through the hall.",
+      zh: "我打開門時，一陣風從走廊穿過。",
+    },
+    {
+      en: "A plate slipped from Mom’s hand and broke into pieces.",
+      zh: "一個盤子從媽媽手裡滑落，摔得粉碎。",
+    },
+    {
+      en: "Dad was wiping the water, and I was picking up the pieces carefully.",
+      zh: "爸爸在擦水，而我小心地撿碎片。",
+    },
+    {
+      en: "Grandma said, “Take it easy.” We were all cooling down.",
+      zh: "奶奶說：「放輕鬆。」我們大家都在冷靜下來。",
+    },
+    {
+      en: "At that time, my brother was running down the stairs with a big smile.",
+      zh: "那時，我弟帶著大大的笑容從樓梯跑下來。",
+    },
+    {
+      en: "He was holding a card that said, “Lunch is ready!”",
+      zh: "他拿著一張寫著「午餐好了！」的卡片。",
+    },
+    {
+      en: "Finally, we were sitting at the table and talking about the terrible mess.",
+      zh: "最後，我們坐在餐桌前，聊著剛才那場糟糕的混亂。",
+    },
+    {
+      en: "We were laughing, and the house felt close and warm again.",
+      zh: "我們笑著，家裡又變得溫暖而親近。",
+    },
   ],
   sentencesForArrange: [
     "It was half past twelve, and the house was busy.",
@@ -1036,8 +1114,8 @@ const UNIT4_STORY: UnitConfig["story"] = {
     "A plate slipped from Mom’s hand and broke into pieces.",
     "Dad was wiping the water, and I was picking up the pieces.",
     "Grandma said, “Take it easy,” and we were cooling down.",
-    "Finally, we were sitting at the table and laughing."
-  ]
+    "Finally, we were sitting at the table and laughing.",
+  ],
 };
 /* =========================
    ✅ Unit 5: 未來式（全新）
@@ -1205,21 +1283,66 @@ const UNIT5_GRAMMAR: UnitConfig["grammar"] = [
 const UNIT5_STORY: UnitConfig["story"] = {
   title: "Diary 5: Tomorrow’s Shopping Plan（明天的購物計畫）",
   paragraphs: [
-    { en: "Dear Diary, tomorrow is my cousin’s party, and we will dress up.", zh: "親愛的日記，明天是我表弟的派對，我們會好好打扮。" },
-    { en: "Tonight, Mom and I are going to the department store because everything is on sale.", zh: "今晚我和媽媽要去百貨公司，因為全部都在特價中。" },
-    { en: "We will get there fast, and it will take only ten minutes by bus.", zh: "我們會很快到那裡，搭公車只要十分鐘。" },
-    { en: "I would like a new sweater, but the price may be high.", zh: "我想要一件新的毛衣，但價格可能很高。" },
-    { en: "What’s more, I am going to buy a pair of jeans and a belt.", zh: "而且，我打算買一條牛仔褲和一條腰帶。" },
-    { en: "My sister will buy a T-shirt, a skirt, and a funny hat for the photo time.", zh: "我妹妹會買一件 T 恤、一條裙子和一頂搞笑的帽子，為了拍照時間。" },
-    { en: "Dad will try on a coat, but he won’t take the ugly one.", zh: "爸爸會試穿一件外套，但他不會選那件醜的。" },
-    { en: "Mom is going to get a pair of shoes because her old ones hurt her feet.", zh: "媽媽要買一雙鞋，因為她的舊鞋會讓她腳痛。" },
-    { en: "We will also buy socks, a tie for Grandpa, and a pair of glasses for Aunt May.", zh: "我們也會買襪子、給爺爺的領帶，還有給阿姨梅的一副眼鏡。" },
-    { en: "The clerk will say the total, and we will pay and get the change.", zh: "店員會報總額，我們會付錢並拿到找零。" },
-    { en: "I will try to save money, so I won’t spend too much on a cap.", zh: "我會試著省錢，所以我不會在帽子上花太多。" },
-    { en: "If the tag comes off, I will take it back to the counter in a second.", zh: "如果標籤脫落，我會立刻把它拿回櫃台。" },
-    { en: "When we get home, we will take off the tags and get ready for tomorrow.", zh: "我們到家後會把標籤拆掉，準備迎接明天。" },
-    { en: "At the party tomorrow night, the bell will ring at seven, and most guests will arrive soon.", zh: "在明天晚上的派對，鈴會在七點響起，而且大多數的客人很快會到。" },
-    { en: "We will take pictures, and my cousin will say, “This will be the best day of the year!”", zh: "我們會拍照，而我表弟會說：「這將是今年最好的一天！」" },
+    {
+      en: "Dear Diary, tomorrow is my cousin’s party, and we will dress up.",
+      zh: "親愛的日記，明天是我表弟的派對，我們會好好打扮。",
+    },
+    {
+      en: "Tonight, Mom and I are going to the department store because everything is on sale.",
+      zh: "今晚我和媽媽要去百貨公司，因為全部都在特價中。",
+    },
+    {
+      en: "We will get there fast, and it will take only ten minutes by bus.",
+      zh: "我們會很快到那裡，搭公車只要十分鐘。",
+    },
+    {
+      en: "I would like a new sweater, but the price may be high.",
+      zh: "我想要一件新的毛衣，但價格可能很高。",
+    },
+    {
+      en: "What’s more, I am going to buy a pair of jeans and a belt.",
+      zh: "而且，我打算買一條牛仔褲和一條腰帶。",
+    },
+    {
+      en: "My sister will buy a T-shirt, a skirt, and a funny hat for the photo time.",
+      zh: "我妹妹會買一件 T 恤、一條裙子和一頂搞笑的帽子，為了拍照時間。",
+    },
+    {
+      en: "Dad will try on a coat, but he won’t take the ugly one.",
+      zh: "爸爸會試穿一件外套，但他不會選那件醜的。",
+    },
+    {
+      en: "Mom is going to get a pair of shoes because her old ones hurt her feet.",
+      zh: "媽媽要買一雙鞋，因為她的舊鞋會讓她腳痛。",
+    },
+    {
+      en: "We will also buy socks, a tie for Grandpa, and a pair of glasses for Aunt May.",
+      zh: "我們也會買襪子、給爺爺的領帶，還有給阿姨梅的一副眼鏡。",
+    },
+    {
+      en: "The clerk will say the total, and we will pay and get the change.",
+      zh: "店員會報總額，我們會付錢並拿到找零。",
+    },
+    {
+      en: "I will try to save money, so I won’t spend too much on a cap.",
+      zh: "我會試著省錢，所以我不會在帽子上花太多。",
+    },
+    {
+      en: "If the tag comes off, I will take it back to the counter in a second.",
+      zh: "如果標籤脫落，我會立刻把它拿回櫃台。",
+    },
+    {
+      en: "When we get home, we will take off the tags and get ready for tomorrow.",
+      zh: "我們到家後會把標籤拆掉，準備迎接明天。",
+    },
+    {
+      en: "At the party tomorrow night, the bell will ring at seven, and most guests will arrive soon.",
+      zh: "在明天晚上的派對，鈴會在七點響起，而且大多數的客人很快會到。",
+    },
+    {
+      en: "We will take pictures, and my cousin will say, “This will be the best day of the year!”",
+      zh: "我們會拍照，而我表弟會說：「這將是今年最好的一天！」",
+    },
   ],
   sentencesForArrange: [
     "Tomorrow is my cousin’s party, and we will dress up.",
@@ -1236,7 +1359,6 @@ const UNIT5_STORY: UnitConfig["story"] = {
     "The bell will ring at seven, and most guests will arrive soon.",
   ],
 };
-
 
 /* =========================
    mkUnit 工廠函式（修正 story 樣板字串）
@@ -1288,7 +1410,6 @@ const mkUnit = (
   },
 });
 
-
 /* =========================
    UNITS 註冊（維持原本 1~6）
 ========================= */
@@ -1308,7 +1429,8 @@ export const UNITS: UnitConfig[] = [
     words: UNIT3_WORDS,
     grammar: UNIT3_GRAMMAR,
     story: UNIT3_STORY,
-  }),  mkUnit(4, "Unit 4: 過去進行式", {
+  }),
+  mkUnit(4, "Unit 4: 過去進行式", {
     words: UNIT4_WORDS,
     grammar: UNIT4_GRAMMAR,
     story: UNIT4_STORY,

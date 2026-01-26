@@ -1120,7 +1120,6 @@ function LearningQuestApp() {
                     // 2. onComplete: 全部學完後，給一個大獎勵 (不加次數，只給分)
                     onComplete={() => {
                       addXP(unit.id, 50); // ✨ 全部完成給 50 XP
-                      toast.success("文法資料庫完全同步！獲得 Bonus XP！");
                     }}
                   />
                 ) : (

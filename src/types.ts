@@ -1,16 +1,15 @@
 export type UnitId = 1 | 2 | 3 | 4 | 5 | 6;
 
 
-export type Word = { term: string; def: string; example?: string };
+export type Word = { term: string; def: string; example?: string | { en: string; zh: string } };
 
 
 export type GrammarPoint = {
-point: string;
-desc: string;
-examples: string[];
+  point: string;
+  desc: string;
+  // 修改這裡：原本是 string[]，改成支援兩種格式
+  examples: (string | { en: string; zh: string })[];
 };
-
-
 
 
 export type MCQ = {

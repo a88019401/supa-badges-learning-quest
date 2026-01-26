@@ -17,7 +17,7 @@ import { useAuth } from "../state/AuthContext";
 /* =========================
    Types
    ========================= */
-type Props = { targets: string[]; onFinished: (score: number) => void };
+type Props = { targets: (string | { en: string; zh: string })[]; onFinished: (score: number) => void };
 
 type Cell = 0 | 1;
 type Board = Cell[][];
@@ -267,7 +267,11 @@ export default function ReorderSentenceGame({ targets, onFinished }: Props) {
   /** ===== 句庫與回合 ===== */
   const roundsRef = useRef<string[] | null>(null);
   if (!roundsRef.current) {
-    roundsRef.current = shuffle(targets);
+    // 轉換 targets 為純字串陣列（提取 en 文本）
+    const sentenceList = targets.map((t) =>
+      typeof t === "string" ? t : t.en
+    );
+    roundsRef.current = shuffle(sentenceList);
   }
   const rounds = roundsRef.current!;
   const total = rounds.length;
