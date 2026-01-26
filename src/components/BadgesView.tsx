@@ -5,7 +5,7 @@ import { BADGE_QR, getBadgeValue } from "../state/progress";
 // 顯示文字（名稱 + 說明）
 export const BADGE_META: Record<string, { name: string; desc: string }> = {
   // 參與類 Participation
-  STORY_FAN: { name: "故事迷", desc: "完整讀完課文故事很多次" },
+  //STORY_FAN: { name: "故事迷", desc: "完整讀完課文故事很多次" },
   GAME_LOVER: { name: "遊戲狂熱", desc: "單次達成 3 / 6 / 10 場連續遊戲" },
   VOCAB_DRILLER: { name: "單字達人", desc: "完成單字練習" },
   GRAMMAR_NERD: { name: "文法專家", desc: "完成文法練習" },
@@ -24,7 +24,7 @@ export const BADGE_META: Record<string, { name: string; desc: string }> = {
 
   // 鼓勵類 Encouragement
   PERSISTENT: { name: "越挫越勇", desc: "從錯誤中不斷學習" },
-  CURIOUS_MIND: { name: "求知若渴", desc: "善用提示功能" },
+  //CURIOUS_MIND: { name: "求知若渴", desc: "善用提示功能" },
   NEVER_GIVE_UP: { name: "永不放棄", desc: "失敗後依然重試" },
   MARATHONER: { name: "馬拉松", desc: "長時間專注學習" },
   TRY_HARD: { name: "勤能補拙", desc: "持續嘗試不怕累" },

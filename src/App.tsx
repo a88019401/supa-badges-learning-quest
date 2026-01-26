@@ -931,12 +931,12 @@ function LearningQuestApp() {
                   >
                     2. 文法
                   </TabButton>
-                  <TabButton
+                  {/*<TabButton
                     active={sub === "text"}
                     onClick={() => setSub("text")}
                   >
                     3. 課文
-                  </TabButton>
+                  </TabButton>*/}
                 </div>
 
                 {sub === "vocab" && (

@@ -6,7 +6,7 @@ import { useAuth } from "./AuthContext";
 
 // === 型別定義 ===
 export type BadgeUnlockEvent = {
-  key: string; // 例如 "STORY_FAN"
+  //key: string; // 例如 "STORY_FAN"
   tier: BadgeTier; // 1, 2, 3
   unlockedAt: string;
 };
@@ -96,7 +96,7 @@ export const BADGE_QR: Record<
   }
 > = {
   // 參與類 Participation —— 只要願意做就有
-  STORY_FAN: { type: "participation", thresholds: [1, 5, 10] }, // 完整閱讀故事 1 / 5 / 10 次
+  //STORY_FAN: { type: "participation", thresholds: [1, 5, 10] }, // 完整閱讀故事 1 / 5 / 10 次
   GAME_LOVER: { type: "participation", thresholds: [3, 6, 10] }, // 連續遊戲場數（3 / 6 / 10 場）
   VOCAB_DRILLER: { type: "participation", thresholds: [3, 10, 30] }, // 單字練習次數
   GRAMMAR_NERD: { type: "participation", thresholds: [3, 10, 30] }, // 文法練習次數
@@ -116,7 +116,7 @@ export const BADGE_QR: Record<
 
   // 鼓勵類 Encouragement —— 獎勵失敗、嘗試與堅持
   PERSISTENT: { type: "encouragement", thresholds: [5, 20, 50] }, // 累積錯誤
-  CURIOUS_MIND: { type: "encouragement", thresholds: [3, 10, 30] }, // 使用提示
+  //CURIOUS_MIND: { type: "encouragement", thresholds: [3, 10, 30] }, // 使用提示
   NEVER_GIVE_UP: { type: "encouragement", thresholds: [1, 5, 15] }, // 重試次數
   MARATHONER: { type: "encouragement", thresholds: [1, 3, 10] }, // 長時間學習次數
   TRY_HARD: { type: "encouragement", thresholds: [10, 50, 100] }, // 總嘗試數（遊戲 + 重試）
@@ -215,8 +215,8 @@ export function getBadgeValue(key: string, p: Progress): number {
   switch (key) {
     // Participation
 
-    case "STORY_FAN":
-      return s.storiesRead;
+    //case "STORY_FAN":
+      //return s.storiesRead;
     // GAME_LOVER：最大連續遊戲場數
     case "GAME_LOVER":
       return s.maxGameStreak;
@@ -290,8 +290,8 @@ export function getBadgeValue(key: string, p: Progress): number {
     // Encouragement
     case "PERSISTENT":
       return s.totalErrors;
-    case "CURIOUS_MIND":
-      return s.totalHints;
+    //case "CURIOUS_MIND":
+      //return s.totalHints;
     case "NEVER_GIVE_UP":
       return s.totalRetries;
     case "MARATHONER":
