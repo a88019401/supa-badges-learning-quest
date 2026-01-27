@@ -1,391 +1,290 @@
-import { useEffect, useRef, useState, useMemo } from "react";
+// src/components/VocabSet.tsx
+import { useState, useEffect, useMemo, type MouseEvent } from "react";
+import { SpeakerWaveIcon } from "@heroicons/react/24/solid";
 import type { Word } from "../types";
 import { Card, SectionTitle } from "./ui";
 
 type Props = {
-  title?: string;
+  title: string;
   words: Word[];
+  onPlayAudio?: (text: string) => void;
   onStudied: () => void;
-  onPlayAudio?: () => void;
 };
 
-/* ------------------ 工具 ------------------ */
-function normalizeLetters(s: string) { return s.toLowerCase().replace(/[^a-z]/g, ""); }
-
-type LetterHint = { ch: string; ok: boolean; extra?: boolean };
-
-function buildLetterHints(targetRaw: string, saidRaw: string): {
-  targetHints: LetterHint[]; saidHints: LetterHint[];
-} {
-  const T = normalizeLetters(targetRaw).split("");
-  const S = normalizeLetters(saidRaw).split("");
-  const m = T.length, n = S.length;
-  const dp: number[][] = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
-  for (let i = 0; i <= m; i++) dp[i][0] = i;
-  for (let j = 0; j <= n; j++) dp[0][j] = j;
-  for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++) {
-    const cost = T[i - 1] === S[j - 1] ? 0 : 1;
-    dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost);
-  }
-  let i = m, j = n;
-  const steps: Array<{ t?: string; s?: string; match: boolean; op: "M"|"S"|"D"|"I" }> = [];
-  while (i > 0 || j > 0) {
-    if (i > 0 && j > 0) {
-      const cost = T[i - 1] === S[j - 1] ? 0 : 1;
-      if (dp[i][j] === dp[i - 1][j - 1] + cost) {
-        steps.push({ t: T[i - 1], s: S[j - 1], match: cost === 0, op: cost === 0 ? "M" : "S" });
-        i--; j--; continue;
-      }
-    }
-    if (i > 0 && dp[i][j] === dp[i - 1][j] + 1) { steps.push({ t: T[i - 1], match: false, op: "D" }); i--; continue; }
-    steps.push({ s: S[j - 1], match: false, op: "I" }); j--;
-  }
-  steps.reverse();
-  const targetHints: LetterHint[] = [], saidHints: LetterHint[] = [];
-  for (const st of steps) {
-    if (st.t !== undefined) targetHints.push({ ch: st.t, ok: st.match });
-    if (st.s !== undefined) saidHints.push({ ch: st.s, ok: st.match, extra: st.op === "I" });
-  }
-  console.log("[HINT] steps:", steps);
-  console.log("[HINT] targetHints:", targetHints);
-  console.log("[HINT] saidHints:", saidHints);
-  return { targetHints, saidHints };
-}
-
-function isCloseMatch(said: string, target: string) {
-  const a = normalizeLetters(said), b = normalizeLetters(target);
-  if (!a || !b) return false;
-  if (a === b || a.includes(b) || b.includes(a)) return true;
-  const cut = Math.max(2, Math.floor(b.length * 0.6));
-  return a.startsWith(b.slice(0, cut));
-}
-
-/* ------------------ Fireworks 元件 ------------------ */
-type StyleVars = React.CSSProperties & { ['--dx']?: string; ['--dy']?: string };
-
-function Fireworks() {
-  // 固定 18 個火花 + 1 個擴散圈
-  const pieces = useMemo(() => {
-    const arr: { dx: number; dy: number; cls: string; bar?: boolean }[] = [];
-    for (let k = 0; k < 18; k++) {
-      const angle = (Math.PI * 2 * k) / 18 + Math.random() * 0.4;
-      const dist = 42 + Math.random() * 26; // 爆開半徑
-      const dx = Math.cos(angle) * dist;
-      const dy = Math.sin(angle) * dist;
-      const cls = ["bg-emerald-400","bg-amber-400","bg-indigo-400","bg-rose-400","bg-cyan-400"][k % 5];
-      arr.push({ dx, dy, cls, bar: k % 3 === 0 });
-    }
-    return arr;
-  }, []);
-
-  return (
-    <div className="fireworks">
-      <div className="fireworks__ring" />
-      {pieces.map((p, i) => {
-        const style: StyleVars = { ['--dx']: `${p.dx}px`, ['--dy']: `${p.dy}px` };
-        return (
-          <span
-            key={i}
-            className={`fireworks__spark ${p.bar ? "fireworks__spark--bar" : ""} ${p.cls}`}
-            style={style}
-          />
-        );
-      })}
-    </div>
-  );
-}
-
-/* ------------------ 主元件 ------------------ */
-export default function VocabSet({
-  title = "單字集",
-  words,
-  onStudied,
-  onPlayAudio,
-}: Props) {
-  console.log("[VocabSet] mount. words:", words);
-
-  const [revealed, setRevealed] = useState<Record<number, boolean>>({});
-  const [passed, setPassed] = useState<Record<number, boolean>>({});
-  const [heard, setHeard] = useState<Record<number, string>>({});
-  const [listeningIdx, setListeningIdx] = useState<number | null>(null);
-
-  const [fails, setFails] = useState<Record<number, number>>({});
-  const [shakeIdx, setShakeIdx] = useState<number | null>(null);
-
-  // ✅ 通過後觸發煙火（1.1 秒）
-  const [burst, setBurst] = useState<Record<number, boolean>>({});
-
-  // 逐字母提示資料
-  const [letterHints, setLetterHints] = useState<
-    Record<number, { targetHints: LetterHint[]; saidHints: LetterHint[] }>
-  >({});
-
-  const [srSupported, setSrSupported] = useState(true);
+export default function VocabSet({ title, words, onPlayAudio, onStudied }: Props) {
+  // 記錄已收集的單字索引
+  const [collected, setCollected] = useState<Set<number>>(new Set());
+  // 記錄目前翻開的卡片索引
+  const [flippedIndex, setFlippedIndex] = useState<number | null>(null);
+  
+  // 語音支援狀態
   const [ttsSupported, setTtsSupported] = useState(true);
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
 
-  // 研究階段暫時隱藏語音辨識的入口，但保留邏輯以便未來復用
-  const showSpeechRecUI = false;
+  // 1. 監聽單字內容變化，重置進度
+  const wordsKey = useMemo(() => words.map(w => w.term).join("|"), [words]);
 
-  const recRef = useRef<SpeechRecognition | null>(null);
-  const curIdxRef = useRef<number | null>(null);
-  const partialRef = useRef<string>("");
-
-  /* ---- 初始化 SR/TTS ---- */
   useEffect(() => {
-    const SRCls = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SRCls) {
-      console.warn("[VocabSet] SpeechRecognition not supported");
-      setSrSupported(false);
-    } else {
-      const r: SpeechRecognition = new SRCls();
-      r.lang = "en-US"; r.continuous = false; r.interimResults = true; r.maxAlternatives = 3;
-      r.onstart = () => console.log("[SR] onstart idx=", curIdxRef.current);
-      r.onresult = (evt: SpeechRecognitionEvent) => {
-        let finalText = "";
-        for (let k = evt.resultIndex; k < evt.results.length; k++) {
-          const res = evt.results[k]; const t = res[0]?.transcript || "";
-          console.log("[SR] result", { k, isFinal: res.isFinal, transcript: t });
-          if (res.isFinal) finalText += t; else partialRef.current = t;
-        }
-        const text = (finalText || partialRef.current || "").trim();
-        if (text && curIdxRef.current !== null) {
-          setHeard((h) => { const next = { ...h, [curIdxRef.current as number]: text }; console.log("[SR] setHeard:", next); return next; });
-        }
-      };
-      r.onerror = (e: any) => { console.warn("[SR] onerror:", e); curIdxRef.current = null; setListeningIdx(null); };
-      r.onend = () => {
-        console.log("[SR] onend");
-        const idx = curIdxRef.current;
-        const text = partialRef.current;
-        partialRef.current = ""; curIdxRef.current = null; setListeningIdx(null);
-        if (idx !== null) {
-          const said = text || heard[idx] || "";
-          const target = words[idx]?.term ?? "";
-          const ok = isCloseMatch(said, target);
-          console.log("[SR] match?", { idx, said, target, ok });
+    setCollected(new Set());
+    setFlippedIndex(null);
+  }, [wordsKey]);
 
-          if (ok) {
-            setPassed((p) => ({ ...p, [idx]: true }));
-            setLetterHints((h) => { const { [idx]: _, ...rest } = h; return rest; });
-            // 🔥 觸發煙火
-            setBurst((b) => ({ ...b, [idx]: true }));
-            console.log("[FX] fireworks -> show", { idx });
-            setTimeout(() => {
-              setBurst((b) => ({ ...b, [idx]: false }));
-              console.log("[FX] fireworks -> hide", { idx });
-            }, 1100);
-          } else {
-            // ⛔️ 這次不正確 -> 一定清成未通過（即使曾通過過）
-            setPassed((p) => ({ ...p, [idx]: false }));
-            try { "vibrate" in navigator && navigator.vibrate?.(160); } catch {}
-            setShakeIdx(idx); setTimeout(() => setShakeIdx((cur) => (cur === idx ? null : cur)), 360);
-            setFails((f) => ({ ...f, [idx]: (f[idx] || 0) + 1 }));
-            const hints = buildLetterHints(target, said);
-            setLetterHints((h) => ({ ...h, [idx]: hints }));
-          }
-        }
-      };
-      recRef.current = r;
+  // 2. 初始化語音
+  useEffect(() => {
+    if (!("speechSynthesis" in window)) {
+      console.warn("Browser does not support Text-to-Speech");
+      setTtsSupported(false);
+      return;
     }
-    if (!("speechSynthesis" in window)) { console.warn("[VocabSet] speechSynthesis not supported"); setTtsSupported(false); }
-    return () => { try { recRef.current?.abort(); } catch {} recRef.current = null; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    const loadVoices = () => {
+      const vs = window.speechSynthesis.getVoices();
+      if (vs.length > 0) {
+        setVoices(vs);
+      }
+    };
+
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+
+    return () => {
+      window.speechSynthesis.onvoiceschanged = null;
+    };
   }, []);
 
-  /* ---- 全數通過 → 自動 onStudied() ---- */
-  useEffect(() => {
-    const done = words.length > 0 && words.every((_, i) => !!passed[i]);
-    const passedCount = words.filter((_, i) => !!passed[i]).length;
-    console.log("[VocabSet] progress:", { passedCount, total: words.length, done });
-    if (done) { console.log("[VocabSet] all correct -> onStudied()"); onStudied(); }
-  }, [passed, words, onStudied]);
+  const progress = words.length ? Math.round((collected.size / words.length) * 100) : 0;
+  const isAllCollected = words.length > 0 && collected.size === words.length;
 
-  /* ---- 事件 ---- */
-  const flipCard = (idx: number) => {
-    setRevealed((r) => { const next = { ...r, [idx]: !r[idx] }; console.log("[UI] flipCard", { idx, toBack: next[idx] === true }); return next; });
-  };
-
-  const startListen = (i: number) => {
-    if (!recRef.current) return;
-    try { recRef.current.stop(); } catch {}
-    // ⭐️ 重新作答：先把該卡「通過」清掉，回到待評分狀態
-    setPassed((p) => {
-      if (p[i]) console.log("[SR] reattempt -> clear pass", { idx: i });
-      return { ...p, [i]: false };
-    });
-    // 可選：清掉舊提示
-    setLetterHints((h) => { const { [i]: _, ...rest } = h; return rest; });
-
-    curIdxRef.current = i; partialRef.current = ""; setListeningIdx(i);
-    console.log("[SR] startListen", { idx: i, target: words[i]?.term });
-    setTimeout(() => {
-      try { recRef.current!.start(); }
-      catch (e) {
-        console.warn("[SR] start error:", e);
-        setListeningIdx(null); curIdxRef.current = null;
-      }
-    }, 80);
-  };
-
-  const stopListen = () => { console.log("[SR] stopListen"); try { recRef.current?.stop(); } catch (e) { console.warn("[SR] stop error:", e); } };
-
+  // 🔊 播放函式
   const speak = (text: string) => {
-    onPlayAudio?.();
-    if (!("speechSynthesis" in window)) return;
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = "en-US";
-    const voices = window.speechSynthesis.getVoices();
-    const prefer = voices.find((v) => /en-(US|GB|AU|CA)/i.test(v.lang));
-    if (prefer) u.voice = prefer;
-    u.onstart = () => console.log("[TTS] start", { text, voice: u.voice?.name, lang: u.lang });
-    u.onend = () => console.log("[TTS] end");
-    u.onerror = (e) => console.warn("[TTS] error", e);
-    window.speechSynthesis.cancel(); window.speechSynthesis.speak(u);
+    if (onPlayAudio) onPlayAudio(text); // 這裡會觸發「聽力小耳朵」
+
+    if (!ttsSupported) return;
+    
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "en-US";
+    utterance.rate = 0.8;
+
+    const prefer = voices.find(v => /en-US/i.test(v.lang) || /Google US English/i.test(v.name));
+    if (prefer) utterance.voice = prefer;
+
+    window.speechSynthesis.speak(utterance);
   };
 
-  const markStudied = () => { console.log("[UI] manual onStudied()"); onStudied(); };
+  const handleCardClick = (index: number) => {
+    setFlippedIndex(flippedIndex === index ? null : index);
+  };
 
-  /* ---- UI ---- */
+  // ✅ 關鍵修改在這裡：收入圖鑑時，直接觸發父層的 onStudied
+  const handleCollect = (e: MouseEvent<HTMLButtonElement>, index: number) => {
+    e.stopPropagation();
+    if (!collected.has(index)) {
+      const next = new Set(collected);
+      next.add(index);
+      setCollected(next);
+      setFlippedIndex(null); // 收集後自動蓋上
+
+      // 🔥 這裡直接呼叫 onStudied！
+      // 因為 App.tsx 裡的 onStudied 邏輯就是「次數+1」，所以這裡呼叫它，就會讓單字達人進度+1
+      onStudied(); 
+    }
+  };
+
+  const handleAudioClick = (e: MouseEvent<HTMLButtonElement>, text: string) => {
+    e.stopPropagation();
+    speak(text);
+  };
+
   return (
-    <Card>
-      <SectionTitle
-        title={title}
-        desc="點卡片標題可翻面（中⇄英）。按 🔈 聽發音學習正確唸法。"
-      />
+    <div className="space-y-6 p-1">
+      {/* 頂部儀表板 */}
+      <Card className="border-b-4 border-neutral-200 relative overflow-hidden">
+        <div className="flex items-center justify-between mb-2 relative z-10">
+          <SectionTitle title={`📦 ${title}`} />
+          <div className="text-right">
+            <div className="text-xs font-bold text-neutral-400 uppercase tracking-wider">
+              Collection Rate
+            </div>
+            <div className="text-2xl font-black font-mono text-indigo-600">
+              {collected.size} / {words.length}
+            </div>
+          </div>
+        </div>
 
-      {showSpeechRecUI && !srSupported && (
-        <div className="mb-3 text-sm text-red-600">你的瀏覽器不支援語音辨識（Web Speech API）。建議使用最新版 Chrome / Edge。</div>
-      )}
-      {!ttsSupported && <div className="mb-3 text-sm text-amber-700">你的瀏覽器不支援語音合成（speechSynthesis）。將隱藏發音功能。</div>}
+        {/* 能量條 */}
+        <div className="relative w-full h-3 bg-neutral-100 rounded-full overflow-hidden shadow-inner mt-2">
+          <div
+            className="absolute top-0 left-0 h-full bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-600 transition-all duration-500"
+            style={{ width: `${progress}%` }}
+          />
+          <div
+            className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-white/40 to-transparent animate-[shimmer_2s_infinite]"
+            style={{ pointerEvents: "none" }}
+          />
+        </div>
+      </Card>
 
-      {/* 放大卡片：手機 1 欄、平板 2 欄、桌機 3 欄；間距更寬 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-        {words.map((w, idx) => {
-          const isBack = !!revealed[idx];
-          const ok = !!passed[idx];
-          const isListening = listeningIdx === idx;
-          const said = heard[idx];
-          const failedTimes = fails[idx] || 0;
-          const pack = letterHints[idx];
+      {/* 單字卡網格 */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        {words.map((w, i) => {
+          const isFlipped = flippedIndex === i;
+          const isCollected = collected.has(i);
 
           return (
             <div
-              key={idx}
-              className={[
-                "relative rounded-2xl border text-left transition",
-                // 放大卡片：更多 padding、高度自動、較大的最小高；文字可換行；內容不外溢
-                "p-4 md:p-5 w-full h-auto min-h-[15rem] whitespace-normal break-words overflow-hidden",
-                ok ? "border-green-400 bg-green-50" : "border-neutral-200 bg-neutral-50 hover:bg-neutral-100",
-                shakeIdx === idx ? "shake-once ring-2 ring-red-300" : "",
-              ].join(" ")}
+              key={i}
+              className="relative h-64 group perspective-1000 cursor-pointer"
+              onClick={() => handleCardClick(i)}
             >
-              {/* ✅ 通過徽章 */}
-              {ok && <span className="absolute top-2 right-2 text-xs font-semibold text-green-700">CORRECT ✅</span>}
+              {/* 卡片容器 */}
+              <div
+                className={`
+                  relative w-full h-full transition-all duration-500 transform-style-3d
+                  ${isFlipped ? "rotate-y-180" : ""}
+                  ${!isFlipped && !isCollected ? "hover:-translate-y-1" : ""}
+                `}
+              >
+                {/* === 正面 === */}
+                <div
+                  className={`
+                    absolute inset-0 backface-hidden rounded-2xl border-2 flex flex-col items-center justify-center p-4 shadow-lg bg-white
+                    ${
+                      isCollected
+                        ? "border-emerald-400 bg-emerald-50/30"
+                        : "border-neutral-200 hover:border-indigo-300 hover:shadow-indigo-100"
+                    }
+                  `}
+                >
+                  <div className="absolute top-3 left-3 text-xs font-mono text-neutral-300">
+                    #{String(i + 1).padStart(2, "0")}
+                  </div>
 
-              {/* ✅ 煙火（僅通過瞬間 1.1s 顯示） */}
-              {ok && burst[idx] && <Fireworks />}
+                  <div
+                    className={`absolute top-3 right-3 w-2 h-2 rounded-full ${
+                      isCollected ? "bg-emerald-500 shadow-[0_0_8px_#10b981]" : "bg-neutral-300"
+                    }`}
+                  />
 
-              {/* 標題（可翻面） */}
-              <button onClick={() => flipCard(idx)} className="text-sm text-neutral-500 mb-2 underline decoration-dotted">
-                #{idx + 1}（點我翻面）
-              </button>
+                  <h3 className="text-2xl font-black text-neutral-800 text-center mb-2 tracking-tight">
+                    {w.term}
+                  </h3>
 
-              {/* 主要文字更大 */}
-              <div className="text-2xl md:text-[1.75rem] font-semibold">{isBack ? w.term : w.def}</div>
-{isBack && w.example && (
-  <div className="text-xs text-neutral-500 mt-1">
-    {typeof w.example === "string" ? w.example : w.example.en}
-  </div>
-)}
-              {/* 操作列：僅在英文面顯示 */}
-              {isBack && (
-                <div className="mt-3 space-y-1">
-                  {/* 第一行：固定寬度按鈕，不被拉伸 */}
-                  <div className="flex items-center gap-2">
-                    {ttsSupported && (
+                  <button
+                    onClick={(e) => handleAudioClick(e, w.term)}
+                    className="mt-2 p-3 rounded-full bg-indigo-50 text-indigo-600 hover:bg-indigo-100 hover:scale-110 transition-all shadow-sm"
+                  >
+                    <SpeakerWaveIcon className="w-5 h-5" />
+                  </button>
+
+                  <div className="absolute bottom-4 text-xs text-neutral-400 font-medium tracking-widest uppercase">
+                    Tap to Flip
+                  </div>
+                </div>
+
+                {/* === 背面 === */}
+                <div
+                  className={`
+                    absolute inset-0 backface-hidden rotate-y-180 rounded-2xl border-2 border-indigo-500 bg-slate-900 text-white p-5 flex flex-col shadow-xl
+                  `}
+                >
+                  <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar">
+                    <div className="flex items-center justify-between border-b border-white/10 pb-2 mb-3">
+                      <span className="font-bold text-lg text-indigo-300">
+                        {w.term}
+                      </span>
                       <button
-                        onClick={() => speak(w.term)}
-                        className="px-3 py-1.5 rounded-lg text-sm border bg-white border-neutral-300 hover:bg-neutral-100 w-[84px] flex-none"
-                        aria-label="play audio" title="播放發音"
-                      >🔈 發音</button>
-                    )}
-                    {showSpeechRecUI && srSupported && (
-                      <button
-                        hidden
-                        onClick={() => (isListening ? stopListen() : startListen(idx))}
-                        className={`px-3 py-1.5 rounded-lg text-sm border w-[96px] flex-none ${
-                          isListening ? "bg-red-50 border-red-300" : "bg-white border-neutral-300 hover:bg-neutral-100"
-                        }`}
-                        aria-label="speech recognition" title="讀出英文"
+                        onClick={(e) => handleAudioClick(e, w.term)}
+                        className="text-white/70 hover:text-white"
                       >
-                        {isListening ? "🛑 停止" : "🎤 跟讀"}
+                        <SpeakerWaveIcon className="w-4 h-4" />
                       </button>
+                    </div>
+
+                    <div className="text-sm font-medium leading-relaxed text-slate-200">
+                      {w.def}
+                    </div>
+
+                    {w.example && (
+                      <div className="mt-3 pt-3 border-t border-white/10">
+                        <div className="text-[10px] text-indigo-400 uppercase tracking-wider mb-1">
+                          Example
+                        </div>
+                        {typeof w.example === "string" ? (
+                          <div className="text-xs text-slate-400 italic">
+                            "{w.example}"
+                          </div>
+                        ) : (
+                          <>
+                            <div className="text-xs text-slate-300 italic mb-1">
+                              "{w.example.en}"
+                            </div>
+                            <div className="text-xs text-slate-500">
+                              {w.example.zh}
+                            </div>
+                          </>
+                        )}
+                      </div>
                     )}
                   </div>
 
-                  {/* 第二行：你說（長句自動換行、必要時捲動） */}
-                  {showSpeechRecUI && (
-                    <div
-                      className="text-xs text-neutral-700 break-words whitespace-normal max-h-16 overflow-y-auto pr-1"
-                      title={said || ""}
-                      aria-live="polite"
-                    >
-                      {said ? `你說：${said}` : "（尚未錄音）"}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* 逐字母提示：暫不顯示（依賴語音辨識） */}
-              {showSpeechRecUI && !ok && isBack && pack && (
-                <div className="mt-2 text-[13px] font-mono leading-6 max-h-28 overflow-y-auto pr-1">
-                  <div className="flex flex-wrap items-center gap-1">
-                    <span className="text-neutral-500 mr-1">提示:</span>
-                    {pack.targetHints.map((h, i2) => (
-                      <span
-                        key={i2}
-                        className={[
-                          "px-1 rounded border",
-                          h.ok
-                            ? "text-green-700 bg-green-50 border-green-300"
-                            : "text-red-700 bg-red-50 border-red-300",
-                        ].join(" ")}
+                  <div className="mt-4 pt-2">
+                    {!isCollected ? (
+                      <button
+                        onClick={(e) => handleCollect(e, i)}
+                        className="w-full py-2 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-400 hover:to-purple-400 text-white text-sm font-bold rounded-lg shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"
                       >
-                        {h.ch}
-                      </span>
-                    ))}
-                    <span className="ml-2 text-neutral-500">（第 {failedTimes} 次）</span>
-                  </div>
-                  <div className="mt-1 flex flex-wrap items-center gap-1">
-                    <span className="text-neutral-500 mr-1">你說:</span>
-                    {pack.saidHints.map((h, i3) => (
-                      <span
-                        key={i3}
-                        className={[
-                          "px-1 rounded border",
-                          h.extra
-                            ? "text-neutral-600 bg-neutral-50 border-neutral-300"
-                            : h.ok
-                            ? "text-green-700 bg-green-50 border-green-300"
-                            : "text-red-700 bg-red-50 border-red-300",
-                        ].join(" ")}
-                        title={h.extra ? "多唸的字母" : h.ok ? "匹配" : "不匹配"}
-                      >
-                        {h.ch}
-                      </span>
-                    ))}
+                        <span>✨ 收入圖鑑</span>
+                      </button>
+                    ) : (
+                      <div className="w-full py-2 text-center text-emerald-400 text-xs font-bold bg-emerald-900/30 rounded-lg border border-emerald-500/30">
+                        ✓ 已掌握 (Collected)
+                      </div>
+                    )}
                   </div>
                 </div>
-              )}
+              </div>
             </div>
           );
         })}
       </div>
 
-      <div className="mt-6 flex items-center gap-3">
-        <button onClick={markStudied} className="px-4 py-2 rounded-xl bg-neutral-900 text-white text-sm">標記為已學習</button>
-        <div className="text-xs text-neutral-500">完成條件：每張卡片 CORRECT ✅ 或手動標記。</div>
+      <div className="mt-8 flex justify-center pb-8">
+        <button
+          disabled={!isAllCollected}
+          className={`
+            relative px-10 py-4 rounded-full font-black text-lg tracking-widest transition-all duration-500
+            ${
+              isAllCollected
+                ? "bg-neutral-900 text-white shadow-2xl hover:scale-105 hover:shadow-indigo-500/30 cursor-pointer"
+                : "bg-neutral-200 text-neutral-400 cursor-not-allowed"
+            }
+          `}
+        >
+          {isAllCollected ? (
+            <span className="flex items-center gap-2">
+              🏆 完成單字特訓 <span className="text-xs opacity-50">(Finish)</span>
+            </span>
+          ) : (
+            <span>🔒 收集所有單字以完成</span>
+          )}
+        </button>
       </div>
-    </Card>
+
+      <style>{`
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+      `}</style>
+    </div>
   );
 }
