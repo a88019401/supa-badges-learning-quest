@@ -26,6 +26,7 @@ export type SnakeChallengeProps = {
   growOnCorrect?: boolean; // 答對是否加長蛇身（預設 true）
   onFinish: (score: number, timeUsed: number) => void;
   onReport?: (report: SnakeReport) => void;
+  onRetry?: () => void;
 };
 
 const GRID = 20;
@@ -121,6 +122,7 @@ export default function SnakeChallenge({
   growOnCorrect = true,
   onFinish,
   onReport,
+  onRetry,
 }: SnakeChallengeProps) {
   //const threshold = passScore ?? targetScore; // 顯示/回報一律用 threshold
   void totalQuestions;
@@ -511,40 +513,42 @@ export default function SnakeChallenge({
 
             // ✅ 【修改重點】開始：先讀取目前分數
             const { data: existingEntry, error: selectError } = await supabase
-              .from('leaderboard')
-              .select('score')
-              .eq('user_id', user.id)
-              .eq('game', 'snake')
+              .from("leaderboard")
+              .select("score")
+              .eq("user_id", user.id)
+              .eq("game", "snake")
               .single();
 
             // 如果查詢出錯（且不是「找不到資料」的錯誤），就拋出錯誤
-            if (selectError && selectError.code !== 'PGRST116') {
-                throw selectError;
+            if (selectError && selectError.code !== "PGRST116") {
+              throw selectError;
             }
 
             const currentScore = existingEntry?.score ?? 0;
 
             // 只有在新分數更高時才更新
             if (correct > currentScore) {
-                const { error: upsertError } = await supabase
-                  .from("leaderboard")
-                  .upsert(
-                    {
-                      user_id: user.id,
-                      full_name: profile.full_name,
-                      game: "snake",
-                      score: correct,
-                    },
-                    {
-                      onConflict: "user_id,game",
-                      ignoreDuplicates: false,
-                    }
-                  );
+              const { error: upsertError } = await supabase
+                .from("leaderboard")
+                .upsert(
+                  {
+                    user_id: user.id,
+                    full_name: profile.full_name,
+                    game: "snake",
+                    score: correct,
+                  },
+                  {
+                    onConflict: "user_id,game",
+                    ignoreDuplicates: false,
+                  }
+                );
 
-                if (upsertError) throw upsertError;
-                console.log("Successfully upserted new high score for snake!");
+              if (upsertError) throw upsertError;
+              console.log("Successfully upserted new high score for snake!");
             } else {
-                console.log("New score is not higher. No update needed for snake.");
+              console.log(
+                "New score is not higher. No update needed for snake."
+              );
             }
             // ✅ 【修改重點】結束
           }
@@ -557,6 +561,8 @@ export default function SnakeChallenge({
   );
 
   const reset = useCallback(() => {
+    // ✅ 只要玩家已經開始過或已經結束過，按「重新開始」就算一次 retry
+    if (started || gameOver) onRetry?.();
     finishedRef.current = false;
     startTimeRef.current = null;
     // ✅ 直接重洗，下一輪一定用到新牌
@@ -577,7 +583,7 @@ export default function SnakeChallenge({
     setUsedSec(0);
     setLogs([]);
     makeRound(0, init);
-  }, [makeRound]);
+  }, [makeRound, pool, started, gameOver, onRetry]);
 
   const DPad = (
     <div className="grid grid-cols-3 gap-2 w-40 select-none">

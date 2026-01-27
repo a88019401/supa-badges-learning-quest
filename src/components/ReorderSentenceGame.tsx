@@ -10,15 +10,22 @@ import {
   useDraggable,
   DragOverlay,
 } from "@dnd-kit/core";
-import type { DragStartEvent, DragMoveEvent, DragEndEvent } from "@dnd-kit/core";
+import type {
+  DragStartEvent,
+  DragMoveEvent,
+  DragEndEvent,
+} from "@dnd-kit/core";
 import { supabase } from "../supabaseClient";
 import { useAuth } from "../state/AuthContext";
 
 /* =========================
    Types
    ========================= */
-type Props = { targets: (string | { en: string; zh: string })[]; onFinished: (score: number) => void };
-
+type Props = {
+  targets: (string | { en: string; zh: string })[];
+  onFinished: (score: number) => void;
+  onRetry?: () => void;
+};
 type Cell = 0 | 1;
 type Board = Cell[][];
 type Piece = {
@@ -261,16 +268,18 @@ const PreviewCell: React.FC<{ status: PreviewCell }> = ({ status }) => {
 /* =========================
    Main Component
    ========================= */
-export default function ReorderSentenceGame({ targets, onFinished }: Props) {
+export default function ReorderSentenceGame({
+  targets,
+  onFinished,
+  onRetry,
+}: Props) {
   const { user, profile } = useAuth();
 
   /** ===== 句庫與回合 ===== */
   const roundsRef = useRef<string[] | null>(null);
   if (!roundsRef.current) {
     // 轉換 targets 為純字串陣列（提取 en 文本）
-    const sentenceList = targets.map((t) =>
-      typeof t === "string" ? t : t.en
-    );
+    const sentenceList = targets.map((t) => (typeof t === "string" ? t : t.en));
     roundsRef.current = shuffle(sentenceList);
   }
   const rounds = roundsRef.current!;
@@ -315,7 +324,10 @@ export default function ReorderSentenceGame({ targets, onFinished }: Props) {
 
   /** ===== 拖曳狀態（Ghost + 預覽） ===== */
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [hoveredCell, setHoveredCell] = useState<{ r: number; c: number } | null>(null);
+  const [hoveredCell, setHoveredCell] = useState<{
+    r: number;
+    c: number;
+  } | null>(null);
   const activePiece = useMemo(
     () => (activeId ? bag.find((p) => p.id === activeId) : null),
     [activeId, bag]
@@ -517,18 +529,25 @@ export default function ReorderSentenceGame({ targets, onFinished }: Props) {
     setBag([]);
   }
 
-function endGame(reason: GameOverReason) {
+  function endGame(reason: GameOverReason) {
     if (gameOver) return;
     setGameOver({ reason });
-
     const report = {
       timestamp: new Date().toISOString(),
       roundsPlayed: roundIdx + 1,
+
+      // ✅ 新版：App 統一吃這兩個
+      score: linesCleared,
+      wrong: wrongCount,
+
+      // ✅ 舊版：保留不拆（避免你 localStorage 舊資料或其他地方還在用）
       linesCleared,
       wrongCount,
+
       wrongItems,
       reason,
     };
+
     try {
       const arr: any[] = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
       arr.push(report);
@@ -550,35 +569,36 @@ function endGame(reason: GameOverReason) {
       try {
         // ✅ 【修改重點】開始：先讀取目前分數
         const { data: existingEntry, error: selectError } = await supabase
-          .from('leaderboard')
-          .select('score')
-          .eq('user_id', user.id)
-          .eq('game', 'tetris')
+          .from("leaderboard")
+          .select("score")
+          .eq("user_id", user.id)
+          .eq("game", "tetris")
           .single();
 
-        if (selectError && selectError.code !== 'PGRST116') { // PGRST116 is "No rows found"
-            throw selectError;
+        if (selectError && selectError.code !== "PGRST116") {
+          // PGRST116 is "No rows found"
+          throw selectError;
         }
 
         const currentScore = existingEntry?.score ?? 0;
 
         // 只有在新分數更高時才更新
         if (linesCleared > currentScore) {
-            const { error: upsertError } = await supabase
-              .from("leaderboard")
-              .upsert(
-                {
-                  user_id: user.id,
-                  full_name: profile.full_name,
-                  game: "tetris",
-                  score: linesCleared,
-                },
-                { onConflict: "user_id,game", ignoreDuplicates: false }
-              );
-            if (upsertError) throw upsertError;
-            console.log("Successfully upserted new high score for tetris!");
+          const { error: upsertError } = await supabase
+            .from("leaderboard")
+            .upsert(
+              {
+                user_id: user.id,
+                full_name: profile.full_name,
+                game: "tetris",
+                score: linesCleared,
+              },
+              { onConflict: "user_id,game", ignoreDuplicates: false }
+            );
+          if (upsertError) throw upsertError;
+          console.log("Successfully upserted new high score for tetris!");
         } else {
-            console.log("New score is not higher. No update needed for tetris.");
+          console.log("New score is not higher. No update needed for tetris.");
         }
         // ✅ 【修改重點】結束
       } catch (error) {
@@ -653,7 +673,10 @@ function endGame(reason: GameOverReason) {
         >
           <div className="flex flex-col lg:flex-row gap-4">
             {/* 棋盤 */}
-            <div className="relative p-3 rounded-2xl border" style={{ touchAction: "none" }}>
+            <div
+              className="relative p-3 rounded-2xl border"
+              style={{ touchAction: "none" }}
+            >
               {/* overlay：未解鎖時 */}
               {phase === "arrange" && (
                 <div className="absolute inset-0 bg-white/70 backdrop-blur-[1px] rounded-2xl z-10 flex items-center justify-center">
@@ -692,7 +715,10 @@ function endGame(reason: GameOverReason) {
               >
                 {Array.from({ length: GRID }).map((_, r) =>
                   Array.from({ length: GRID }).map((_, c) => (
-                    <PreviewCell key={`prev-${r}-${c}`} status={previewBoard[r][c]} />
+                    <PreviewCell
+                      key={`prev-${r}-${c}`}
+                      status={previewBoard[r][c]}
+                    />
                   ))
                 )}
               </div>
@@ -715,7 +741,9 @@ function endGame(reason: GameOverReason) {
                     piece={p}
                     disabled={phase === "arrange"}
                     selected={selected === p.id}
-                    onSelect={() => setSelected((sel) => (sel === p.id ? null : p.id))}
+                    onSelect={() =>
+                      setSelected((sel) => (sel === p.id ? null : p.id))
+                    }
                   />
                 ))}
               </div>
@@ -732,7 +760,9 @@ function endGame(reason: GameOverReason) {
 
           {/* 拖曳浮層：in-ghost（不可見本體，只看紅/綠預覽） */}
           <DragOverlay>
-            {activePiece ? <DraggablePiece piece={activePiece} isGhost /> : null}
+            {activePiece ? (
+              <DraggablePiece piece={activePiece} isGhost />
+            ) : null}
           </DragOverlay>
         </DndContext>
       </Card>
@@ -848,6 +878,18 @@ function endGame(reason: GameOverReason) {
               >
                 繳交
               </button>
+              {/* ✅ 我累了按鈕：有消到 1 條以上算 completed，否則算 wrong-limit */}
+              <button
+                type="button"
+                onClick={() => {
+                  const reason: GameOverReason =
+                    linesCleared >= 1 ? "completed" : "wrong-limit";
+                  endGame(reason);
+                }}
+                className="px-4 py-2 rounded-xl border bg-white hover:bg-neutral-50 text-neutral-700"
+              >
+                我累了
+              </button>
             </>
           ) : (
             <button className="px-4 py-2 rounded-xl border" disabled>
@@ -883,7 +925,10 @@ function endGame(reason: GameOverReason) {
                 <div className="text-sm font-medium mb-1">錯誤題目與正解：</div>
                 <div className="max-h-64 overflow-auto space-y-2 pr-1">
                   {wrongItems.map((w, i) => (
-                    <div key={i} className="p-2 rounded-xl border bg-neutral-50">
+                    <div
+                      key={i}
+                      className="p-2 rounded-xl border bg-neutral-50"
+                    >
                       <div className="text-xs text-neutral-500">題目</div>
                       <div className="text-sm">{w.question}</div>
                       <div className="mt-1 text-xs text-neutral-500">正解</div>
@@ -897,6 +942,7 @@ function endGame(reason: GameOverReason) {
             <div className="mt-4 flex gap-2 justify-end">
               <button
                 onClick={() => {
+                  onRetry?.();
                   setRoundIdx(0);
                   const firstAns = tokenize(rounds[0] ?? "");
                   let shuffled = shuffle(firstAns);

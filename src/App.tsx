@@ -1070,6 +1070,8 @@ useEffect(() => {
                         snakeCorrectTotal: r.correct, // 🔸 給 ACCURACY_GOD 用
                       });
                     }}
+                      onRetry={() => reportActivity({ totalRetries: 1 })}
+
                   />
                 ) : (
                   <VocabQuiz
@@ -1130,14 +1132,10 @@ useEffect(() => {
                           ),
                         },
                       });
-                      reportActivity({
-                        isGame: true,
-
-                        gamesPlayed: 1,
-                        perfectRuns: score === 10 ? 1 : 0,
-                        totalErrors: Math.max(0, 10 - score),
-                      });
+                     
                     }}
+                      onRetry={() => reportActivity({ totalRetries: 1 })}
+
                   />
                 ))}
 

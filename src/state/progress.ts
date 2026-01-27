@@ -118,9 +118,9 @@ export const BADGE_QR: Record<
   PERSISTENT: { type: "encouragement", thresholds: [5, 20, 50] }, // 累積錯誤
   //CURIOUS_MIND: { type: "encouragement", thresholds: [3, 10, 30] }, // 使用提示
   NEVER_GIVE_UP: { type: "encouragement", thresholds: [1, 5, 15] }, // 重試次數
-  MARATHONER: { type: "encouragement", thresholds: [1, 3, 10] }, // 長時間學習次數
+  //MARATHONER: { type: "encouragement", thresholds: [1, 3, 10] }, // 長時間學習次數
   TRY_HARD: { type: "encouragement", thresholds: [10, 50, 100] }, // 總嘗試數（遊戲 + 重試）
-  SLOW_STEADY: { type: "encouragement", thresholds: [1, 5, 10] }, // 穩紮穩打（這裡以 longSessions 近似）
+  //SLOW_STEADY: { type: "encouragement", thresholds: [1, 5, 10] }, // 穩紮穩打（這裡以 longSessions 近似）
   COMEBACK_KID: { type: "encouragement", thresholds: [1, 3, 5] }, // 逆轉勝
   PRACTICE_MAKE: { type: "encouragement", thresholds: [5, 15, 30] }, // 練習次數（遊戲數）
   BRAVE_HEART: { type: "encouragement", thresholds: [1, 5, 10] }, // 挑戰失敗次數
@@ -294,12 +294,12 @@ export function getBadgeValue(key: string, p: Progress): number {
       //return s.totalHints;
     case "NEVER_GIVE_UP":
       return s.totalRetries;
-    case "MARATHONER":
-      return s.longSessions;
+    //case "MARATHONER":
+      //return s.longSessions;
     case "TRY_HARD":
       return s.gamesPlayed + s.totalRetries;
-    case "SLOW_STEADY":
-      return s.longSessions;
+    //case "SLOW_STEADY":
+      //return s.longSessions;
     case "COMEBACK_KID":
       return s.comebackRuns;
     case "PRACTICE_MAKE":
