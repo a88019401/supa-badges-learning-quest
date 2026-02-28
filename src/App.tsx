@@ -964,7 +964,7 @@ useEffect(() => {
                       active={grammarView === "reorder"}
                       onClick={() => setGrammarView("reorder")}
                     >
-                      俄羅斯方塊
+                      方塊
                     </TabButton>
                   </div>
                 )}
