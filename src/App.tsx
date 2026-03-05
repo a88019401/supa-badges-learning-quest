@@ -513,25 +513,28 @@ function AuthGate() {
 export default function App() {
   const { session, profile, loading } = useAuth();
 
-  if (loading) {
+  // ✅ 只有「還沒拿到 session」且「正在載入」時才顯示讀取中
+  // 這樣 Supabase 背景 refresh（loading短暫=true）就不會把 LearningQuestApp 卸載掉
+  if (loading && !session) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         讀取中...
       </div>
     );
   }
-  // 沒 session = 一律回登入
+
+  // ✅ 沒 session = 一律回登入
   if (!session) {
     return <AuthGate />;
   }
 
-  // 有 session 但 profile 還沒填名 = 去補資料
-  if (!profile?.full_name) {
+  // ✅ 有 session，但 profile 還在載入中時：不要提早切到 ProfileSetup（避免 unmount）
+  // 等 loading 結束後，確認真的沒 full_name 才去 ProfileSetup
+  if (!loading && !profile?.full_name) {
     return <ProfileSetup />;
   }
 
-  // 如果已登入，就顯示原本的 LearningQuestApp
-  // 為了方便，我把您原本的 App 內容包成一個新元件
+  // ✅ 正常顯示主程式（背景 refresh 時仍保留畫面與 tab state）
   return <LearningQuestApp />;
 }
 function LearningQuestApp() {
