@@ -562,6 +562,8 @@ function LearningQuestApp() {
     reportActivity,
     reportGrammarTetris,
     reset,
+    // 🌟 新增：把對照組進度系統裡預留的 API 拿出來
+    reportChallengeRun,
   } = useProgress();
 
   // 🔔 獎章解鎖提示 queue
@@ -724,7 +726,8 @@ useEffect(() => {
       longSessions: isLongSession ? 1 : 0, // 長時間挑戰也算一次 longSessions
       totalErrors: Math.max(0, 10 - score),
     });
-
+// 🌟 新增：呼叫挑戰結算 (對照組的 progress.ts 雖然不會算 SRL 極速傳說，但維持呼叫可以確保兩邊結構一致，未來擴充不會報錯)
+    reportChallengeRun({ score, timeUsed, stars: starsThisRun });
     // === 原本的進度更新邏輯 ===
     const newLv = {
       bestScore: Math.max(prevLv?.bestScore ?? 0, score),
