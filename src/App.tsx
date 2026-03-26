@@ -41,11 +41,13 @@ import { useAuth } from "./state/AuthContext"; // <-- 匯入 useAuth
 import { supabase } from "./supabaseClient"; // <-- 匯入 supabase client
 import ProfileSetup from "./components/ProfileSetup";
 import Leaderboard from "./components/Leaderboard";
+import { logLSAEvent } from "./lib/analytics";
+import { LsaState } from "./lib/lsa-states";
 /* -----------------------------
    類型（僅供本檔使用）
 ------------------------------ */
 type Tab = "learn" | "challenge" | "badges" | "leaderboard";
-type LearnSubTab = "vocab" | "grammar" | "text";
+type LearnSubTab = "vocab" | "grammar" | "text" | null;
 type VocabView = "set" | "quiz" | "snake";
 type GrammarView = "explain" | "reorder";
 type TextView = "story" | "arrange";
@@ -575,11 +577,10 @@ export default function App() {
 }
 function LearningQuestApp() {
   // 頁籤 / 視圖狀態
-  const { signOut } = useAuth();
-
+  const { signOut, user, profile } = useAuth();
   const [tab, setTab] = useState<Tab>("learn");
   const [unitId] = useState<UnitId>(1);
-  const [sub, setSub] = useState<LearnSubTab>("vocab");
+  const [sub, setSub] = useState<LearnSubTab>(null);
   const [vocabView, setVocabView] = useState<VocabView>("set");
   const [grammarView, setGrammarView] = useState<GrammarView>("explain");
   const [textView, setTextView] = useState<TextView>("story");
@@ -845,26 +846,44 @@ function LearningQuestApp() {
           </div>
         </div>
         <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 hide-scrollbar">
-          <TabButton active={tab === "learn"} onClick={() => setTab("learn")}>
+          <TabButton
+            active={tab === "learn"}
+            onClick={() => {
+              logLSAEvent(user?.id, profile?.full_name, LsaState.NAV_LEARN);
+              setTab("learn");
+              setSub(null); // 確保每次進來都要重新選
+            }}
+          >
             學習區
           </TabButton>
           <TabButton
             active={tab === "challenge"}
             onClick={() => {
+              logLSAEvent(user?.id, profile?.full_name, LsaState.NAV_CHALLENGE);
               setTab("challenge");
-              setMode("select");
-              setLevel(calcUnlockedCount(uProg.challenge.levels, 10));
             }}
           >
             挑戰區
           </TabButton>
-          <TabButton active={tab === "badges"} onClick={() => setTab("badges")}>
+          <TabButton
+            active={tab === "badges"}
+            onClick={() => {
+              logLSAEvent(user?.id, profile?.full_name, LsaState.NAV_BADGES);
+              setTab("badges");
+            }}
+          >
             獎章區
           </TabButton>
-          {/* 3. ✅ 新增排行榜按鈕 */}
           <TabButton
             active={tab === "leaderboard"}
-            onClick={() => setTab("leaderboard")}
+            onClick={() => {
+              logLSAEvent(
+                user?.id,
+                profile?.full_name,
+                LsaState.NAV_LEADERBOARD,
+              );
+              setTab("leaderboard");
+            }}
           >
             排行榜
           </TabButton>{" "}
@@ -971,13 +990,49 @@ function LearningQuestApp() {
                 <div className="flex items-center gap-2 mb-3">
                   <TabButton
                     active={sub === "vocab"}
-                    onClick={() => setSub("vocab")}
+                    onClick={() => {
+                      // 紀錄 A: 導覽動作 (切換到單字分頁)
+                      logLSAEvent(
+                        user?.id,
+                        profile?.full_name,
+                        LsaState.NAV_LEARN,
+                        { sub: "vocab" },
+                      );
+
+                      // 紀錄 B: 內容動作 (因為預設會顯示單字集，所以補上單字集的狀態)
+                      logLSAEvent(
+                        user?.id,
+                        profile?.full_name,
+                        LsaState.LEARN_VOCAB_SET,
+                      );
+
+                      setSub("vocab");
+                      setVocabView("set"); // 強制重置子視圖為「單字集」
+                    }}
                   >
                     1. 單字
                   </TabButton>
                   <TabButton
                     active={sub === "grammar"}
-                    onClick={() => setSub("grammar")}
+                    onClick={() => {
+                      // 紀錄 A: 導覽動作 (切換到文法分頁)
+                      logLSAEvent(
+                        user?.id,
+                        profile?.full_name,
+                        LsaState.NAV_LEARN,
+                        { sub: "grammar" },
+                      );
+
+                      // 紀錄 B: 內容動作 (因為預設會顯示文法說明，所以補上文法說明的狀態)
+                      logLSAEvent(
+                        user?.id,
+                        profile?.full_name,
+                        LsaState.LEARN_GRAMMAR_EXPLAIN,
+                      );
+
+                      setSub("grammar");
+                      setGrammarView("explain"); // 強制重置子視圖為「文法說明」
+                    }}
                   >
                     2. 文法
                   </TabButton>
@@ -988,12 +1043,27 @@ function LearningQuestApp() {
                     3. 課文
                   </TabButton>*/}
                 </div>
+                {/* 如果還沒選，顯示引導 */}
+                {sub === null && (
+                  <div className="py-20 text-center border-2 border-dashed border-neutral-200 rounded-3xl">
+                    <p className="text-neutral-400 font-medium">
+                      請點選上方按鈕開始學習 🚀
+                    </p>
+                  </div>
+                )}
 
                 {sub === "vocab" && (
                   <div className="flex items-center gap-2">
                     <TabButton
                       active={vocabView === "set"}
-                      onClick={() => setVocabView("set")}
+                      onClick={() => {
+                        logLSAEvent(
+                          user?.id,
+                          profile?.full_name,
+                          LsaState.LEARN_VOCAB_SET,
+                        );
+                        setVocabView("set");
+                      }}
                     >
                       單字集
                     </TabButton>
@@ -1002,7 +1072,14 @@ function LearningQuestApp() {
                     </TabButton>*/}
                     <TabButton
                       active={vocabView === "snake"}
-                      onClick={() => setVocabView("snake")}
+                      onClick={() => {
+                        logLSAEvent(
+                          user?.id,
+                          profile?.full_name,
+                          LsaState.LEARN_SNAKE_GAME,
+                        );
+                        setVocabView("snake");
+                      }}
                     >
                       貪吃蛇
                     </TabButton>
@@ -1013,13 +1090,27 @@ function LearningQuestApp() {
                   <div className="flex items-center gap-2">
                     <TabButton
                       active={grammarView === "explain"}
-                      onClick={() => setGrammarView("explain")}
+                      onClick={() => {
+                        logLSAEvent(
+                          user?.id,
+                          profile?.full_name,
+                          LsaState.LEARN_GRAMMAR_EXPLAIN,
+                        );
+                        setGrammarView("explain");
+                      }}
                     >
                       文法說明
                     </TabButton>
                     <TabButton
                       active={grammarView === "reorder"}
-                      onClick={() => setGrammarView("reorder")}
+                      onClick={() => {
+                        logLSAEvent(
+                          user?.id,
+                          profile?.full_name,
+                          LsaState.LEARN_TETRIS_GAME,
+                        );
+                        setGrammarView("reorder");
+                      }}
                     >
                       方塊
                     </TabButton>
