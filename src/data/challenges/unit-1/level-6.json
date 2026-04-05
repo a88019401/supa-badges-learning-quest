@@ -1,85 +1,138 @@
 {
-  "meta": { "time": 60, "title": "Unit 1 • Level 1" },
+  "meta": {
+    "time": 60,
+    "title": "Unit 1 • Level 6"
+  },
   "questions": [
     {
-      "id": "u1-l1-q01",
-      "prompt": "Lynn: Does Brian play dodge ball every Sunday?  Tina: Yes, ____.",
-      "choices": ["he is", "he isn’t", "he does", "he doesn’t"],
-      "correctIndex": 2,
-      "explain": "肯定簡答要用助動詞：Yes, he does.",
-      "tag": "grammar"
+      "id": "u1-l6-q01",
+      "prompt": "My grandparents enjoy living in the ____ because the air is fresher there.",
+      "choices": [
+        "country",
+        "course",
+        "row",
+        "power"
+      ],
+      "correctIndex": 0,
+      "explain": "in the country 指「在鄉下」。",
+      "tag": "vocab"
     },
     {
-      "id": "u1-l1-q02",
-      "prompt": "Ann: ____ your mother a housewife?  Sue: Yes, ____.",
-      "choices": ["Are; I am", "Is; she is", "Am; you are", "Is; he is"],
+      "id": "u1-l6-q02",
+      "prompt": "Which sentence is correct?",
+      "choices": [
+        "Because it was late, so we went home.",
+        "Because it was late, we went home.",
+        "Although it was late, so we went home.",
+        "Because was it late, we went home."
+      ],
       "correctIndex": 1,
-      "explain": "問句主詞是 your mother（第三人稱單數），用 Is；答句用 she 代替。",
+      "explain": "because 和 so 不能在同一句裡一起用來連接同一組因果。",
       "tag": "grammar"
     },
     {
-      "id": "u1-l1-q03",
-      "prompt": "Amy: Are Ben and his brother students?  Bella: Ben is, but his brother ____.",
-      "choices": ["is", "are", "isn’t", "aren’t"],
-      "correctIndex": 2,
-      "explain": "前面肯定 Ben 是；後句是否定『他哥哥不是』→ isn’t。",
-      "tag": "grammar"
-    },
-    {
-      "id": "u1-l1-q04",
-      "prompt": "Peggy: Is Scott’s uncle a police officer?  Neil: ____  He’s an office worker.",
-      "choices": ["No, she isn’t.", "No, he isn’t.", "Yes, she is.", "Yes, he is."],
+      "id": "u1-l6-q03",
+      "prompt": "The windows must ____ before the guests arrive.",
+      "choices": [
+        "clean",
+        "be cleaned",
+        "cleaned",
+        "be clean"
+      ],
       "correctIndex": 1,
-      "explain": "敘述指出他是上班族而不是警察→否定且主詞 he：No, he isn’t.",
+      "explain": "情態助動詞後的被動語態是 must be + p.p.，所以用 be cleaned。",
       "tag": "grammar"
     },
     {
-      "id": "u1-l1-q05",
-      "prompt": "Nigel has thin lips, but his daughter ____.",
-      "choices": ["do", "don’t", "does", "doesn’t"],
+      "id": "u1-l6-q04",
+      "prompt": "Japan is a country in Asia. Here, country means “____.”",
+      "choices": [
+        "countryside",
+        "nation",
+        "field",
+        "village"
+      ],
+      "correctIndex": 1,
+      "explain": "這裡 country 指的是「國家」，所以是 nation。",
+      "tag": "vocab"
+    },
+    {
+      "id": "u1-l6-q05",
+      "prompt": "He hates ____ at by others.",
+      "choices": [
+        "laugh",
+        "to laugh",
+        "being laughed",
+        "be laughed"
+      ],
+      "correctIndex": 2,
+      "explain": "hate 後面可接 V-ing；若是被動，就變成 being + p.p.，所以是 being laughed at。",
+      "tag": "grammar"
+    },
+    {
+      "id": "u1-l6-q06",
+      "prompt": "The night view from the mountain was an amazing ____.",
+      "choices": [
+        "sight",
+        "sign",
+        "item",
+        "grade"
+      ],
+      "correctIndex": 0,
+      "explain": "amazing sight = 驚人的景象。",
+      "tag": "vocab"
+    },
+    {
+      "id": "u1-l6-q07",
+      "prompt": "I didn’t know this word, so I looked ____ in the dictionary.",
+      "choices": [
+        "up it",
+        "it up",
+        "for it up",
+        "it for up"
+      ],
+      "correctIndex": 1,
+      "explain": "look up 是可分片語，代名詞 it 也要放中間，所以是 looked it up。",
+      "tag": "grammar"
+    },
+    {
+      "id": "u1-l6-q08",
+      "prompt": "Eric didn’t join the club, and ____ did his brother.",
+      "choices": [
+        "too",
+        "so",
+        "either",
+        "neither"
+      ],
       "correctIndex": 3,
-      "explain": "主詞 his daughter（第三人稱單數），否定用 doesn’t。",
+      "explain": "這裡是否定附和，所以用 neither did his brother。either 通常放句尾。",
       "tag": "grammar"
     },
     {
-      "id": "u1-l1-q06",
-      "prompt": "Zac: Hi. I’m Zac. Nice to meet you.  Elsa: Hi. I’m Elsa. ____",
-      "choices": ["I’m fine. Thank you.", "Nice to meet you, too.", "Yeah. She is beautiful.", "It is a new pen."],
-      "correctIndex": 1,
-      "explain": "對應寒暄句型：Nice to meet you, too.",
-      "tag": "dialog"
+      "id": "u1-l6-q09",
+      "prompt": "Grandpa’s ____ is not very good, so he needs glasses when reading.",
+      "choices": [
+        "sight",
+        "row",
+        "course",
+        "deal"
+      ],
+      "correctIndex": 0,
+      "explain": "這裡 sight 指「視力」。",
+      "tag": "vocab"
     },
     {
-      "id": "u1-l1-q07",
-      "prompt": "Henry: ____  Alice: I’m 165 centimeters tall.",
-      "choices": ["Are you 165 centimeters tall?", "Are you very tall?", "How tall are you?", "Do you have long legs?"],
+      "id": "u1-l6-q10",
+      "prompt": "The lights went out ____ we were having dinner.",
+      "choices": [
+        "because",
+        "while",
+        "when",
+        "so"
+      ],
       "correctIndex": 2,
-      "explain": "問『身高多少』要用 How tall...?",
-      "tag": "dialog"
-    },
-    {
-      "id": "u1-l1-q08",
-      "prompt": "Ian is one hundred and eighty centimeters tall. He is good at playing basketball, so he ____.",
-      "choices": ["has small eyes", "is on the school team", "studies English every day", "plays music"],
-      "correctIndex": 1,
-      "explain": "身高高、球打得好 → 合理推論在校隊：is on the school team。",
-      "tag": "dialog"
-    },
-    {
-      "id": "u1-l1-q09",
-      "prompt": "Stephen Curry is a great NBA player from the USA, and ____. Everyone likes him.",
-      "choices": ["he’s good at playing basketball", "he paints every day", "you can say that again", "look at that boy"],
-      "correctIndex": 0,
-      "explain": "承接前句描述球員 → 他很擅長打籃球。",
-      "tag": "dialog"
-    },
-    {
-      "id": "u1-l1-q10",
-      "prompt": "Ken: Who is young and handsome?  Bill: ____.",
-      "choices": ["Our new teacher, Mr. Chen, is.", "Isn’t that Mr. Chen?", "Mr. Chen isn’t.", "Our sister, Lisa, is."],
-      "correctIndex": 0,
-      "explain": "Wh- 問『誰』當主詞；答案用名詞片語 + is：Our new teacher, Mr. Chen, is.",
-      "tag": "dialog"
+      "explain": "停電是短動作，正在吃飯是長動作，所以要用 when。",
+      "tag": "grammar"
     }
   ]
 }

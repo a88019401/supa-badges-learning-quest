@@ -315,12 +315,12 @@ function ResultModal({
                       <div className="mt-1 text-sm">
                         你的作答：<span className="font-medium">{picked}</span>
                       </div>
-                      <div className="text-sm">
+                      {/*<div className="text-sm">
                         參考答案：<span className="font-medium">{correct}</span>
-                      </div>
+                      </div>*/}
                       {it.explain && (
                         <div className="mt-1 text-sm text-neutral-700">
-                          詳解：{it.explain}
+                          提示：{it.explain}
                         </div>
                       )}
                       {it.tag && (
