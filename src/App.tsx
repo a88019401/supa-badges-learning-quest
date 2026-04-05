@@ -292,9 +292,9 @@ function ResultModal({
                       : `${letter(it.pickedIndex)}. ${
                           it.choices[it.pickedIndex]
                         }`;
-                  const correct = `${letter(it.correctIndex)}. ${
+                    /*const correct = `${letter(it.correctIndex)}. ${
                     it.choices[it.correctIndex]
-                  }`;
+                  }`;*/
                   return (
                     <div
                       key={it.id ?? `i-${i}`}
