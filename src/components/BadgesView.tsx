@@ -35,9 +35,9 @@ export const BADGE_META: Record<string, { name: string; desc: string }> = {
     name: "貪吃蛇王",
     desc: "單字測驗最高分（目前以「單字測驗最佳分」計算）達到：銅 10｜銀 30｜金 60",
   },
-  TETRIS_ARCH: {
+TETRIS_ARCH: {
     name: "方塊建築師",
-    desc: "文法方塊最高成績（最高消除行/列數）達到：銅 10｜銀 40｜金 80",
+    desc: "文法方塊單局最高成績（最高消除行/列數）達到：銅 5｜銀 10｜金 20",
   },
   SPEED_DEMON: {
     name: "極速傳說",
