@@ -292,7 +292,7 @@ function ResultModal({
                       : `${letter(it.pickedIndex)}. ${
                           it.choices[it.pickedIndex]
                         }`;
-                    /*const correct = `${letter(it.correctIndex)}. ${
+                  /*const correct = `${letter(it.correctIndex)}. ${
                     it.choices[it.correctIndex]
                   }`;*/
                   return (
@@ -449,7 +449,7 @@ function AuthGate() {
             L
           </div>
           <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-neutral-900 to-neutral-700">
-            {mode === "signin" ? "登入 LearningQuest" : "註冊 LearningQuest"}
+            {mode === "signin" ? "登入 A++會考英文總複習" : "註冊 A++會考英文總複習"}
           </h1>
           <p className="text-sm text-neutral-500 mt-2 font-medium">
             {mode === "signin"
@@ -1216,9 +1216,9 @@ function LearningQuestApp() {
                       });
                       const isPerfect = r.correct === r.totalQuestions;
                       // 🔸 這裡自己定義「通關門檻」
-                      const passScore = 7; 
-// 🌟 修正 Bug：直接用分數判定，不管蛇最後是不是撞牆死掉
-const safePassed = r.correct >= passScore;
+                      const passScore = 7;
+                      // 🌟 修正 Bug：直接用分數判定，不管蛇最後是不是撞牆死掉
+                      const safePassed = r.correct >= passScore;
                       setModalData({
                         title: r.title || `單字練習：貪吃蛇`,
                         score: r.correct,
@@ -1383,14 +1383,14 @@ const safePassed = r.correct >= passScore;
                         {
                           1: fixedU1L1,
                           2: fixedU1L2,
-                        3: fixedU1L3,
-                        4: fixedU1L4,
-                        5: fixedU1L5,
-                        6: fixedU1L6,
-                        7: fixedU1L7,
-                        8: fixedU1L8,
-                        9: fixedU1L9,
-                        10: fixedU1L10,
+                          3: fixedU1L3,
+                          4: fixedU1L4,
+                          5: fixedU1L5,
+                          6: fixedU1L6,
+                          7: fixedU1L7,
+                          8: fixedU1L8,
+                          9: fixedU1L9,
+                          10: fixedU1L10,
                         } as const
                       )[level]
                     : undefined
