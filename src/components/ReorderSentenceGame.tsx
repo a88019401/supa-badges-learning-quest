@@ -282,27 +282,27 @@ export default function ReorderSentenceGame({
   const { user, profile } = useAuth();
 
   /** ===== 句庫與回合 ===== */
-type SentenceTarget = {
-  en: string;
-  zh?: string;
-};
+  type SentenceTarget = {
+    en: string;
+    zh?: string;
+  };
 
-const roundsRef = useRef<SentenceTarget[] | null>(null);
-if (!roundsRef.current) {
-  const sentenceList = targets.map((t) =>
-    typeof t === "string" ? { en: t } : { en: t.en, zh: t.zh },
-  );
-  roundsRef.current = shuffle(sentenceList);
-}
-const rounds = roundsRef.current!;
-const total = rounds.length;
-const [roundIdx, setRoundIdx] = useState(0);
+  const roundsRef = useRef<SentenceTarget[] | null>(null);
+  if (!roundsRef.current) {
+    const sentenceList = targets.map((t) =>
+      typeof t === "string" ? { en: t } : { en: t.en, zh: t.zh },
+    );
+    roundsRef.current = shuffle(sentenceList);
+  }
+  const rounds = roundsRef.current!;
+  const total = rounds.length;
+  const [roundIdx, setRoundIdx] = useState(0);
 
-/** ===== 文法作答狀態 ===== */
-const currentTarget = rounds[roundIdx] ?? { en: "", zh: "" };
-const current = currentTarget.en;
-const currentZh = currentTarget.zh ?? "";
-const answerTokens = useMemo(() => tokenize(current), [current]);
+  /** ===== 文法作答狀態 ===== */
+  const currentTarget = rounds[roundIdx] ?? { en: "", zh: "" };
+  const current = currentTarget.en;
+  const currentZh = currentTarget.zh ?? "";
+  const answerTokens = useMemo(() => tokenize(current), [current]);
   const [tray, setTray] = useState<string[]>(() => {
     let shuffled = shuffle(answerTokens);
     if (shuffled.join("|") === answerTokens.join("|"))
@@ -324,9 +324,15 @@ const answerTokens = useMemo(() => tokenize(current), [current]);
   const [wrongItems, setWrongItems] = useState<
     Array<{ question: string; correct: string }>
   >([]);
-  const [gameOver, setGameOver] = useState<null | { reason: GameOverReason }>(
+  // ✨ 新增紀錄答對的題目
+  const [correctItems, setCorrectItems] = useState<
+    Array<{ question: string; correct: string }>
+  >([]);
+const [gameOver, setGameOver] = useState<null | { reason: GameOverReason }>(
     null,
   );
+  // ✨ 1. 新增：用來控制結算視窗要不要顯示
+  const [showResultModal, setShowResultModal] = useState(false);
 
   /** ===== DnD sensors ===== */
   const sensors = useSensors(
@@ -509,6 +515,11 @@ const answerTokens = useMemo(() => tokenize(current), [current]);
       picked.every((t, i) => t === answerTokens[i]);
     setChecked(ok);
     if (ok) {
+      // ✨ 答對時，把這題加進紀錄
+      setCorrectItems((list) => [
+        ...list,
+        { question: current, correct: answerTokens.join(" ") },
+      ]);
       dealThreePiecesAndCheckFit();
     } else {
       setShowKnowBtn(true);
@@ -538,7 +549,8 @@ const answerTokens = useMemo(() => tokenize(current), [current]);
     }
     const nextIdx = roundIdx + 1;
     setRoundIdx(nextIdx);
-const nextAns = tokenize(rounds[nextIdx]?.en ?? "");    let shuffled = shuffle(nextAns);
+    const nextAns = tokenize(rounds[nextIdx]?.en ?? "");
+    let shuffled = shuffle(nextAns);
     if (shuffled.join("|") === nextAns.join("|")) shuffled = shuffle(nextAns);
     setTray(shuffled);
     setPicked([]);
@@ -548,9 +560,11 @@ const nextAns = tokenize(rounds[nextIdx]?.en ?? "");    let shuffled = shuffle(n
     setBag([]);
   }
 
-  function endGame(reason: GameOverReason) {
+function endGame(reason: GameOverReason) {
     if (gameOver) return;
     setGameOver({ reason });
+    setShowResultModal(true); // ✨ 2. 遊戲結束時，打開成績單視窗
+    
     const report = {
       timestamp: new Date().toISOString(),
       roundsPlayed: roundIdx + 1,
@@ -562,8 +576,9 @@ const nextAns = tokenize(rounds[nextIdx]?.en ?? "");    let shuffled = shuffle(n
       // ✅ 舊版：保留不拆（避免你 localStorage 舊資料或其他地方還在用）
       linesCleared,
       wrongCount,
-
       wrongItems,
+
+      correctItems, // ✨ 補上這行，把答對的題目打包
       reason,
     };
 
@@ -804,16 +819,16 @@ const nextAns = tokenize(rounds[nextIdx]?.en ?? "");    let shuffled = shuffle(n
           </div>
         </div>
 
- <div className="text-xs text-neutral-500 mb-2">
-  點選下方片段來排列；排好後按「繳交」。若錯誤會立即顯示正解並提供「知道了」。
-</div>
+        <div className="text-xs text-neutral-500 mb-2">
+          點選下方片段來排列；排好後按「繳交」。若錯誤會立即顯示正解並提供「知道了」。
+        </div>
 
-{currentZh && (
-  <div className="mb-3 px-3 py-2 rounded-xl border border-amber-200 bg-amber-50 text-sm text-amber-900">
-    <span className="font-semibold">中文提示：</span>
-    {currentZh}
-  </div>
-)}
+        {currentZh && (
+          <div className="mb-3 px-3 py-2 rounded-xl border border-amber-200 bg-amber-50 text-sm text-amber-900">
+            <span className="font-semibold">中文提示：</span>
+            {currentZh}
+          </div>
+        )}
 
         {/* 已選答案區 */}
         <div
@@ -897,42 +912,86 @@ const nextAns = tokenize(rounds[nextIdx]?.en ?? "");    let shuffled = shuffle(n
           </div>
         </div>
 
-        {/* 操作列 */}
-        <div className="mt-3 flex gap-2">
-          {phase === "arrange" ? (
-            <>
+{/* 操作列 */}
+        <div className="mt-4 relative">
+          {/* ✨ 3. 兩段式遮罩：高級 UI 轉場版 */}
+          {gameOver && !showResultModal && (
+            <div className="absolute -inset-3 z-10 flex items-center justify-center bg-white/40 backdrop-blur-[2px] rounded-xl transition-all duration-300">
               <button
-                onClick={submit}
-                className="px-4 py-2 rounded-xl bg-neutral-900 text-white hover:opacity-90"
-              >
-                繳交
-              </button>
-              {/* ✅ 我累了按鈕：有消到 1 條以上算 completed，否則算 wrong-limit */}
-              <button
-                type="button"
                 onClick={() => {
-                  const reason: GameOverReason =
-                    linesCleared >= 1 ? "completed" : "wrong-limit";
-                  endGame(reason);
+                  onRetry?.(); // 👈 只有按這顆，才會發送 LSA 的 retry 紀錄！
+                  
+                  // ✨ 這裡才真正執行 Reset 狀態
+                  setRoundIdx(0);
+                  const firstAns = tokenize(rounds[0]?.en ?? "");
+                  let shuffled = shuffle(firstAns);
+                  if (shuffled.join("|") === firstAns.join("|"))
+                    shuffled = shuffle(firstAns);
+                  setTray(shuffled);
+                  setPicked([]);
+                  setChecked(null);
+                  setShowKnowBtn(false);
+
+                  setBoard(emptyBoard());
+                  setBag([]);
+                  setSelected(null);
+
+                  setLinesCleared(0);
+                  setWrongCount(0);
+                  setWrongItems([]);
+                  setCorrectItems([]); 
+                  setGameOver(null); // 解除 gameOver，把按鈕還給使用者
                 }}
-                className="px-4 py-2 rounded-xl border bg-white hover:bg-neutral-50 text-neutral-700"
+                className="px-6 py-2.5 rounded-xl bg-neutral-900 text-white font-bold shadow-xl hover:bg-neutral-800 hover:shadow-2xl hover:-translate-y-1 active:translate-y-0 transition-all flex items-center gap-2"
               >
-                我累了
+                <span className="text-xl leading-none">↻</span>
+                <span>再玩一次</span>
               </button>
-            </>
-          ) : (
-            <button className="px-4 py-2 rounded-xl border" disabled>
-              已解鎖方塊：請先完成上方 3 塊放置
-            </button>
+            </div>
           )}
-          <span className="ml-auto text-xs text-neutral-500">
-            棋盤 10×10｜行／列消除｜無時間限制
-          </span>
+
+          {/* 原本的操作按鈕群：加上高級的「退到背景」動畫效果 */}
+          <div 
+            className={`flex gap-2 transition-all duration-500 ${
+              gameOver && !showResultModal 
+                ? "opacity-30 grayscale blur-[2px] scale-[0.98] pointer-events-none" 
+                : ""
+            }`}
+          >
+            {phase === "arrange" ? (
+              <>
+                <button
+                  onClick={submit}
+                  className="px-4 py-2 rounded-xl bg-neutral-900 text-white hover:opacity-90"
+                >
+                  繳交
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const reason: GameOverReason =
+                      linesCleared >= 1 ? "completed" : "wrong-limit";
+                    endGame(reason);
+                  }}
+                  className="px-4 py-2 rounded-xl border bg-white hover:bg-neutral-50 text-neutral-700"
+                >
+                  我累了
+                </button>
+              </>
+            ) : (
+              <button className="px-4 py-2 rounded-xl border bg-neutral-50 text-neutral-400" disabled>
+                已解鎖方塊：請先完成上方 3 塊放置
+              </button>
+            )}
+            <span className="ml-auto text-xs text-neutral-500 self-center">
+              棋盤 10×10｜行／列消除｜無時間限制
+            </span>
+          </div>
         </div>
       </Card>
 
-      {/* End Modal */}
-      {gameOver && (
+{/* End Modal */}
+      {gameOver && showResultModal && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
           <div className="w-full max-w-xl rounded-2xl bg-white border shadow-lg p-5">
             <div className="flex items-center gap-3 mb-2">
@@ -969,30 +1028,14 @@ const nextAns = tokenize(rounds[nextIdx]?.en ?? "");    let shuffled = shuffle(n
             )}
 
             <div className="mt-4 flex gap-2 justify-end">
+              {/* ✨ 4. 純關閉按鈕：不呼叫 onRetry，也不洗掉狀態 */}
               <button
                 onClick={() => {
-                  onRetry?.();
-                  setRoundIdx(0);
-const firstAns = tokenize(rounds[0]?.en ?? "");                  let shuffled = shuffle(firstAns);
-                  if (shuffled.join("|") === firstAns.join("|"))
-                    shuffled = shuffle(firstAns);
-                  setTray(shuffled);
-                  setPicked([]);
-                  setChecked(null);
-                  setShowKnowBtn(false);
-
-                  setBoard(emptyBoard());
-                  setBag([]);
-                  setSelected(null);
-
-                  setLinesCleared(0);
-                  setWrongCount(0);
-                  setWrongItems([]);
-                  setGameOver(null);
+                  setShowResultModal(false); // 僅隱藏視窗
                 }}
-                className="px-4 py-2 rounded-xl bg-neutral-900 text-white hover:opacity-90"
+                className="px-6 py-2 rounded-xl border bg-white hover:bg-neutral-50 text-neutral-700 font-bold transition-colors"
               >
-                重新開始
+                關閉
               </button>
             </div>
           </div>

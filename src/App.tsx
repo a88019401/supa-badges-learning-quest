@@ -449,7 +449,9 @@ function AuthGate() {
             L
           </div>
           <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-neutral-900 to-neutral-700">
-            {mode === "signin" ? "登入 A++會考英文總複習" : "註冊 A++會考英文總複習"}
+            {mode === "signin"
+              ? "登入 A++會考英文總複習"
+              : "註冊 A++會考英文總複習"}
           </h1>
           <p className="text-sm text-neutral-500 mt-2 font-medium">
             {mode === "signin"
@@ -671,17 +673,32 @@ function LearningQuestApp() {
   }, []);
 
   const uProg = progress.byUnit[unitId];
-  // ✅ 監聽 grammar-tetris-report 事件，交給 progress 判斷是否要頒發 SUPER_GRAMMAR_EXPERT
+  // ✅ 監聽 grammar-tetris-report 事件，交給 progress 判斷並紀錄 LSA
   useEffect(() => {
     const onReport = (e: Event) => {
-      const { detail } = e as CustomEvent<{
-        roundsPlayed: number;
-        reason: "completed" | "no-fit" | "wrong-limit";
-      }>;
+      // 將型別改為 any，確保能順利讀取到所有成績細節
+      const { detail } = e as CustomEvent<any>;
       if (!detail) return;
-      // ✅ 直接交給 progress：達成「completed 且 roundsPlayed ≥ 80」就會頒發 SUPER_GRAMMAR_EXPERT
+
+      // ✅ 1. 交給進度系統計算獎章
       reportGrammarTetris(detail);
+
+      // ✅ 2. 傳送詳細的方塊遊戲結束數據給 LSA
+      logLSAEvent(
+        user?.id,
+        profile?.full_name,
+        LsaState.TETRIS_GAME_END, // 🌟 使用新的結算代號
+        {
+          reason: detail.reason, // 知道他是過關、卡死、還是放棄
+          score: detail.score, // 消除的行/列數
+          wrongCount: detail.wrongCount, // 錯題數
+          roundsPlayed: detail.roundsPlayed, // 玩了幾關
+          wrongItems: detail.wrongItems, // ✨ 記錄他排錯的句子
+          correctItems: detail.correctItems, // ✨ 記錄他排對的句子
+        },
+      );
     };
+
     window.addEventListener(
       "learning-quest:grammar-tetris-report",
       onReport as EventListener,
@@ -691,7 +708,8 @@ function LearningQuestApp() {
         "learning-quest:grammar-tetris-report",
         onReport as EventListener,
       );
-  }, [reportGrammarTetris]);
+    // 🌟 這裡一定要補上 user?.id, profile?.full_name，LSA 才知道是誰玩的
+  }, [reportGrammarTetris, user?.id, profile?.full_name]);
   // 在「學習區 tab」待久一點，算一次 longSessions
   useEffect(() => {
     if (tab === "learn") {
@@ -1208,8 +1226,8 @@ function LearningQuestApp() {
                           id: `snake-${unitId}-${log.round}`,
                           prompt: log.prompt,
                           choices: log.options,
-                          correctIndex: correctIndex >= 0 ? correctIndex : 0, // 理論上應該找得到；找不到就先防呆到 0
-                          pickedIndex: picked >= 0 ? picked : null, // -1 轉成 null，Modal 會顯示「（未作答）」
+                          correctIndex: correctIndex >= 0 ? correctIndex : 0,
+                          pickedIndex: picked >= 0 ? picked : null,
                           correct: log.isCorrect,
                           tag: "vocab",
                         };
@@ -1219,17 +1237,18 @@ function LearningQuestApp() {
                       const passScore = 7;
                       // 🌟 修正 Bug：直接用分數判定，不管蛇最後是不是撞牆死掉
                       const safePassed = r.correct >= passScore;
+
                       setModalData({
                         title: r.title || `單字練習：貪吃蛇`,
                         score: r.correct,
                         total: r.totalQuestions,
                         stars: computeLevelStars(r.correct),
                         timeUsed: r.usedTime,
-                        //passed: r.passed,
                         passed: safePassed,
                         items,
                       });
                       setModalOpen(true);
+
                       reportActivity({
                         isGame: true,
                         gamesPlayed: 1,
@@ -1238,8 +1257,39 @@ function LearningQuestApp() {
                         perfectRuns: isPerfect ? 1 : 0,
                         snakeCorrectTotal: r.correct, // 🔸 給 ACCURACY_GOD 用
                       });
+
+                      // ✨ 就在 reportActivity 下面，補上這段專屬的 LSA 紀錄
+                      logLSAEvent(
+                        user?.id,
+                        profile?.full_name,
+                        LsaState.SNAKE_GAME_END,
+                        {
+                          score: r.correct,
+                          wrong: r.wrong,
+                          timeUsed: r.usedTime,
+                          passed: safePassed,
+                          items: items.map((it) => ({
+                            // ✨ 把每一題的題目、正確與否、他的作答一起紀錄
+                            prompt: it.prompt,
+                            correct: it.correct,
+                            picked:
+                              it.pickedIndex !== null
+                                ? it.choices[it.pickedIndex]
+                                : "未作答",
+                          })),
+                        },
+                      );
                     }}
-                    onRetry={() => reportActivity({ totalRetries: 1 })}
+                    onRetry={() => {
+                      reportActivity({ totalRetries: 1 });
+                      // ✨ 補上這段：告訴 LSA 學生按了重新開始
+                      logLSAEvent(
+                        user?.id,
+                        profile?.full_name,
+                        LsaState.LEARN_SNAKE_GAME,
+                        { action: "retry" }, // 加上 retry 標記方便後台辨識
+                      );
+                    }}
                   />
                 ) : (
                   <VocabQuiz
@@ -1301,7 +1351,16 @@ function LearningQuestApp() {
                         },
                       });
                     }}
-                    onRetry={() => reportActivity({ totalRetries: 1 })}
+                    onRetry={() => {
+                      reportActivity({ totalRetries: 1 });
+                      // ✨ 補上這段：告訴 LSA 學生按了重新開始
+                      logLSAEvent(
+                        user?.id,
+                        profile?.full_name,
+                        LsaState.LEARN_TETRIS_GAME,
+                        { action: "retry" }, // 加上 retry 標記方便後台辨識
+                      );
+                    }}
                   />
                 ))}
 

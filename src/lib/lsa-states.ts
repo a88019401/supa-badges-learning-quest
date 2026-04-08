@@ -10,6 +10,11 @@ export const LsaState = {
   LEARN_TETRIS_GAME: "LEARN_TETRIS_GAME",
   CHALLENGE_START: "CHALLENGE_START",
   CHALLENGE_FINISH: "CHALLENGE_FINISH",
+
+// ✨ 新增這兩個：專門用來記錄遊戲結算
+  SNAKE_GAME_END: "SNAKE_GAME_END",
+  TETRIS_GAME_END: "TETRIS_GAME_END",
+
 } as const;
 
 // (可選) 如果其他地方需要把 LsaState 當作型別使用，加上這行：
