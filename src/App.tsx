@@ -627,7 +627,7 @@ function LearningQuestApp() {
     patchUnit,
     reportActivity,
     reportGrammarTetris,
-    reset,
+    
     // 🌟 新增：把對照組進度系統裡預留的 API 拿出來
     reportChallengeRun,
   } = useProgress();
