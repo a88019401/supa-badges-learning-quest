@@ -941,9 +941,10 @@ function LearningQuestApp() {
           </button>
         </div>
       </header>
-      <main className="max-w-5xl mx-auto px-4 pb-10">{/* HUD */}
-{/* 將 md:grid-cols-3 改為 md:grid-cols-2 讓剩下的兩張卡片平均分配空間 */}
-<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 relative z-10">
+      <main className="max-w-5xl mx-auto px-4 pb-10">
+        {/* HUD */}
+        {/* 將 md:grid-cols-3 改為 md:grid-cols-2 讓剩下的兩張卡片平均分配空間 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 relative z-10">
           <Card className="flex flex-col justify-center">
             <div className="text-sm font-medium text-neutral-500 mb-1 flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.6)]"></span>{" "}
@@ -1332,9 +1333,9 @@ function LearningQuestApp() {
                       addXP(unit.id, 10); // ✨ 每學一個觀念給 10 XP
                     }}
                     // 2. onComplete: 全部學完後，給一個大獎勵 (不加次數，只給分)
-                    onComplete={() => {
-                      addXP(unit.id, 50); // ✨ 全部完成給 50 XP
-                    }}
+                    //onComplete={() => {
+                     // addXP(unit.id, 50); // ✨ 全部完成給 50 XP
+                    //}}
                   />
                 ) : (
                   <ReorderSentenceGame

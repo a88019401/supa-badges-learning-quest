@@ -105,7 +105,7 @@ export default function VocabSet({
     e.stopPropagation();
     speak(text);
   };
-
+const [isFinished, setIsFinished] = useState(false);
   return (
     <div className="space-y-6 p-1">
       {/* 頂部儀表板 */}
@@ -271,22 +271,29 @@ export default function VocabSet({
         })}
       </div>
 
-      <div className="mt-8 flex justify-center pb-8">
+  <div className="mt-8 flex justify-center pb-8">
         <button
           disabled={!isAllCollected}
+          onClick={() => {
+            setIsFinished(true); // 觸發成功特效
+            setTimeout(() => setIsFinished(false), 3000); // 3秒後恢復原狀
+          }}
           className={`
-            relative px-10 py-4 rounded-full font-black text-lg tracking-widest transition-all duration-500
+            relative px-10 py-4 rounded-full font-black text-lg tracking-widest transition-all duration-300
             ${
-              isAllCollected
+              isFinished
+                ? "bg-emerald-500 text-white shadow-xl animate-bounce scale-110" // 按下後的特效：綠色 + 彈跳 + 放大
+                : isAllCollected
                 ? "bg-neutral-900 text-white shadow-2xl hover:scale-105 hover:shadow-indigo-500/30 cursor-pointer"
                 : "bg-neutral-200 text-neutral-400 cursor-not-allowed"
             }
           `}
         >
-          {isAllCollected ? (
+          {isFinished ? (
+             <span>🎉 恭喜完成單字特訓！</span>
+          ) : isAllCollected ? (
             <span className="flex items-center gap-2">
-              🏆 完成單字特訓{" "}
-              <span className="text-xs opacity-50">(Finish)</span>
+              🏆 完成單字特訓 <span className="text-xs opacity-50">(Finish)</span>
             </span>
           ) : (
             <span>🔒 收集所有單字以完成</span>
