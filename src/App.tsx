@@ -882,8 +882,9 @@ function LearningQuestApp() {
             <div className="text-2xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
               會考英文總複習
             </div>
+            
             <div className="text-sm font-medium text-neutral-500/80">
-              取得獎章、登上排行榜！想辦法全破挑戰區吧！　
+              嗨，{profile?.full_name} 同學 👋 取得獎章、登上排行榜！想辦法全破挑戰區吧！　
             </div>
           </div>
         </div>
