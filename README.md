@@ -621,3 +621,12 @@ create policy "lsa_logs_select_own"
 -- View 權限（是否能看到全體仍取決於 profiles RLS）
 grant select on public.badge_leaderboard_ranked to authenticated;
 ```
+## License
+
+LearningQuest may be used, modified, and redistributed for educational,
+academic, and non-commercial research purposes with proper attribution.
+
+Commercial use is prohibited without prior written permission.
+
+Copyright © 2026 Chang Yu-Hao (張祐豪).  
+See [LICENSE](./LICENSE) for details.
